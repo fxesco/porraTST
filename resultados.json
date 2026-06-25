@@ -309,7 +309,7 @@
     "balon_bronce": ""
   },
   "_playoff_slots": {
-    "3ABCDF": "",
+    "3ABCDF": "Catar",
     "3CDFGH": "",
     "3CEFHI": "",
     "3EHIJK": "",
@@ -322,10 +322,10 @@
     {
       "ronda": "dieciseisavos",
       "match": "R16-1",
-      "local": "",
-      "visitante": "",
-      "gL": "",
-      "gV": "",
+      "local": "Pepe",
+      "visitante": "Catar",
+      "gL": "1",
+      "gV": "0",
       "fecha": "28 Jun",
       "bonus": 1
     },
