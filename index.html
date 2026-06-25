@@ -775,8 +775,18 @@
 
   <!-- ══ PRÓXIMOS PARTIDOS ══ -->
   <div id="panel-upcoming" class="panel">
-    <div class="section-label">Próximos 5 partidos · pronósticos de todos</div>
-    <div id="upcoming-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="switchSubTab('upcoming', 'grupos', this)">📅 Fase de grupos</button>
+      <button class="subtab" onclick="switchSubTab('upcoming', 'eliminatoria', this)">🏟️ Eliminatoria</button>
+    </div>
+    <div id="subpanel-upcoming-grupos" class="subpanel active">
+      <div class="section-label">Próximos 5 partidos · pronósticos de todos</div>
+      <div id="upcoming-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+    </div>
+    <div id="subpanel-upcoming-eliminatoria" class="subpanel">
+      <div class="section-label">Pronósticos de todos para las rondas eliminatorias</div>
+      <div id="upcoming-eliminatoria-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+    </div>
   </div>
 
   <!-- ══ PLAY OFF ══ -->
@@ -809,7 +819,20 @@
         <option value="">— Selecciona un participante —</option>
       </select>
     </div>
-    <div id="picks-content"></div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="switchSubTab('picks', 'clasificacion', this)">📊 Clasificación de grupos</button>
+      <button class="subtab" onclick="switchSubTab('picks', 'partidos', this)">📅 Partidos</button>
+      <button class="subtab" onclick="switchSubTab('picks', 'rondas', this)">🏟️ Rondas clasificatorias</button>
+    </div>
+    <div id="subpanel-picks-clasificacion" class="subpanel active">
+      <div id="picks-clasificacion-content"></div>
+    </div>
+    <div id="subpanel-picks-partidos" class="subpanel">
+      <div id="picks-partidos-content"></div>
+    </div>
+    <div id="subpanel-picks-rondas" class="subpanel">
+      <div id="picks-rondas-content"></div>
+    </div>
   </div>
 
   <!-- ══ GANADORES (unifica Predicciones finales + Premios individuales) ══ -->
@@ -3830,13 +3853,23 @@ function populatePlayerSelector() {
 
 function renderPicks() {
   const jugador = document.getElementById('player-selector').value;
-  const container = document.getElementById('picks-content');
-  if (!jugador) { container.innerHTML = ''; return; }
+  if (!jugador) {
+    document.getElementById('picks-clasificacion-content').innerHTML = '';
+    document.getElementById('picks-partidos-content').innerHTML = '';
+    document.getElementById('picks-rondas-content').innerHTML = '';
+    return;
+  }
+  renderPicksClasificacion(jugador);
+  renderPicksPartidos(jugador);
+  renderPicksRondas(jugador);
+}
 
+// ── SUBAPARTADO: Clasificación de grupos pronosticada ──
+function renderPicksClasificacion(jugador) {
+  const container = document.getElementById('picks-clasificacion-content');
   const picks = state.pronosticos.filter(p => p.jugador === jugador);
   let html = '';
 
-  // ── Posiciones de grupo pronosticadas (1º/2º/3º/4º por cada uno de los 12 grupos) ──
   const letrasGrupos = Object.keys(state.groupStandings || {}).sort();
   if (letrasGrupos.length) {
     const ptsClasifGrupos = CONFIG.PTS['Fase de grupos']?.clasificado || 0;
@@ -3859,9 +3892,6 @@ function renderPicks() {
       for (let pos = 1; pos <= 4; pos++) {
         const equipoPron = posPick ? posPick[`pos${pos}`] : '';
         const equipoReal = real[pos-1]?.equipo || '';
-        // Solo cuenta como acierto puntuable si pos es 1ª o 2ª Y coincide
-        // exactamente con quien quedó en esa misma posición. 3º/4º nunca
-        // suman, aunque coincidan, porque esos equipos no clasifican.
         const esAciertoPuntuable = pos <= 2 && equipoPron && equipoReal && normEquipo(equipoPron) === normEquipo(equipoReal);
         const marca = esAciertoPuntuable ? ` ✓+${ptsClasifGrupos}` : '';
         const color = esAciertoPuntuable ? 'color:var(--lime);font-weight:700' : '';
@@ -3874,33 +3904,97 @@ function renderPicks() {
       html += `</tbody></table></div>`;
     });
     html += `</div>`;
+  } else {
+    html = '<div class="loading">Sin datos de clasificación todavía.</div>';
   }
 
-  const fases = [...new Set(state.partidos.map(p => p.fase))];
+  container.innerHTML = html;
+}
 
-  fases.forEach(fase => {
-    const partidos = state.partidos.filter(p => p.fase === fase);
+// ── SUBAPARTADO: Partidos pronosticados de la fase de grupos, por grupo ──
+function renderPicksPartidos(jugador) {
+  const container = document.getElementById('picks-partidos-content');
+  const picks = state.pronosticos.filter(p => p.jugador === jugador);
+  let html = '';
+
+  // Agrupada por letra de grupo (A, B, C...), igual que en "Fase grupos → Partidos".
+  const partidosGrupos = state.partidos.filter(p => p.fase === 'Fase de grupos');
+  const porGrupo = {};
+  partidosGrupos.forEach(p => {
+    const letra = EQUIPO_GRUPO[p.local] || EQUIPO_GRUPO[p.visitante] || '?';
+    (porGrupo[letra] = porGrupo[letra] || []).push(p);
+  });
+
+  if (Object.keys(porGrupo).length) {
+    html += `<div class="section-label">Fase de grupos</div>`;
+    Object.keys(porGrupo).sort().forEach(letra => {
+      html += `<div class="match-group">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:0.05em">Grupo ${letra}</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius)">`;
+      porGrupo[letra].forEach(p => {
+        const pick = picks.find(pk => pk.partido_id === p.id);
+        const pronL = pick?.gL ?? '?';
+        const pronV = pick?.gV ?? '?';
+        const { pts, tipo, detalle } = pick
+          ? calcPoints(pronL, pronV, p.gL, p.gV, p.fase, p.bonus)
+          : { pts: 0, tipo: 'pending', detalle: '' };
+        const resultHtml = p.gL !== '' && p.gV !== ''
+          ? `<span class="pick-result pick-${tipo}" title="${detalle}">${pronL}–${pronV} · ${pts}pts</span>`
+          : `<span class="pick-result pick-pending">${pronL}–${pronV}</span>`;
+        const bonusPick = parseInt(p.bonus) === 2
+          ? ' <span style="font-size:0.75rem;font-weight:800;color:var(--gold);letter-spacing:0.04em">×2</span>'
+          : '';
+        html += `<div class="pick-row" style="${parseInt(p.bonus)===2?'border-left:3px solid var(--gold);padding-left:0.6rem;':''}" >
+          <span>${getFlag(p.local)} ${p.local} <b>vs</b> ${getFlag(p.visitante)} ${p.visitante}${bonusPick}</span>
+          ${resultHtml}
+        </div>`;
+      });
+      html += '</div></div>';
+    });
+  }
+
+  container.innerHTML = html || '<div class="loading">Sin pronósticos de fase de grupos.</div>';
+}
+
+// ── SUBAPARTADO: Rondas clasificatorias (eliminatoria) pronosticadas por este participante ──
+// Igual que en "Próximos → Eliminatoria", el título de cada cruce muestra
+// los equipos REALES (resueltos desde la clasificación de grupos en vivo,
+// o el partido ya fijado en _playoff_partidos), no el ID técnico interno.
+function renderPicksRondas(jugador) {
+  const container = document.getElementById('picks-rondas-content');
+  const picks = state.pronosticos.filter(p => p.jugador === jugador);
+  let html = '';
+
+  const rounds = buildPlayoffRounds();
+  const cruceInfoPorMatch = {};
+  rounds.flat().forEach(m => { cruceInfoPorMatch[m.id] = m; });
+  if (rounds.tercerPuesto) cruceInfoPorMatch['tercer-1'] = rounds.tercerPuesto[0];
+
+  const NOMBRES_RONDA = { dieciseisavos:'Dieciseisavos', octavos:'Octavos', cuartos:'Cuartos', semifinal:'Semifinal', final:'Final' };
+
+  RONDAS_ELIMINATORIA.forEach(ronda => {
     html += `<div class="match-group">
-      <div class="section-label">${fase}</div>
+      <div class="section-label">${NOMBRES_RONDA[ronda.key]}</div>
       <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius)">`;
 
-    partidos.forEach(p => {
-      const pick = picks.find(pk => pk.partido_id === p.id);
-      const pronL = pick?.gL ?? '?';
-      const pronV = pick?.gV ?? '?';
-      const { pts, tipo, detalle } = pick
-        ? calcPoints(pronL, pronV, p.gL, p.gV, p.fase, p.bonus)
-        : { pts: 0, tipo: 'pending', detalle: '' };
+    ronda.matchIds.forEach(matchId => {
+      const pronostico = picks.find(p => p.partido_id === matchId);
+      const real = getPlayoffPartidoFijado(matchId);
+      const info = cruceInfoPorMatch[matchId];
+      const equipoRealA = (real && real.local) || info?.teamA || '?';
+      const equipoRealB = (real && real.visitante) || info?.teamB || '?';
 
-      const resultHtml = p.gL !== '' && p.gV !== ''
-        ? `<span class="pick-result pick-${tipo}" title="${detalle}">${pronL}–${pronV} · ${pts}pts</span>`
-        : `<span class="pick-result pick-pending">${pronL}–${pronV}</span>`;
-
-      const bonusPick = parseInt(p.bonus) === 2
-        ? ' <span style="font-size:0.75rem;font-weight:800;color:var(--gold);letter-spacing:0.04em">×2</span>'
-        : '';
-      html += `<div class="pick-row" style="${parseInt(p.bonus)===2?'border-left:3px solid var(--gold);padding-left:0.6rem;':''}" >
-        <span>${getFlag(p.local)} ${p.local} <b>vs</b> ${getFlag(p.visitante)} ${p.visitante}${bonusPick}</span>
+      if (!pronostico || !pronostico.equipoA) {
+        html += `<div class="pick-row"><span>${getFlag(equipoRealA)} ${equipoRealA} <b>vs</b> ${getFlag(equipoRealB)} ${equipoRealB}</span><span style="color:var(--muted)">sin pronóstico</span></div>`;
+        return;
+      }
+      const { pts, tipo } = calcPlayoffMatchPoints(pronostico, real, ronda.faseKey);
+      const tieneResultadoReal = real && real.gL !== '' && real.gV !== '' && real.gL != null;
+      const resultHtml = tieneResultadoReal
+        ? `<span class="pick-result pick-${tipo==='exact'?'exact':tipo==='sign'?'sign':'miss'}">${pronostico.gL}–${pronostico.gV} · ${pts}pts</span>`
+        : `<span class="pick-result pick-pending">${pronostico.gL || '?'}–${pronostico.gV || '?'}</span>`;
+      html += `<div class="pick-row">
+        <span>${getFlag(pronostico.equipoA)} ${pronostico.equipoA} <b>vs</b> ${getFlag(pronostico.equipoB)} ${pronostico.equipoB}</span>
         ${resultHtml}
       </div>`;
     });
@@ -3908,7 +4002,102 @@ function renderPicks() {
     html += '</div></div>';
   });
 
-  container.innerHTML = html || '<div class="loading">Sin pronósticos.</div>';
+  // 3º Y 4º PUESTO (aparte, porque no encadena con la cascada principal)
+  const pron3 = picks.find(p => p.partido_id === 'tercer-1');
+  if (pron3 && pron3.equipoA) {
+    const real3 = getPlayoffPartidoFijado('tercer-1');
+    const { pts, tipo } = calcPlayoffMatchPoints(pron3, real3, '3er puesto');
+    const tieneResultadoReal = real3 && real3.gL !== '' && real3.gV !== '' && real3.gL != null;
+    const resultHtml = tieneResultadoReal
+      ? `<span class="pick-result pick-${tipo==='exact'?'exact':tipo==='sign'?'sign':'miss'}">${pron3.gL}–${pron3.gV} · ${pts}pts</span>`
+      : `<span class="pick-result pick-pending">${pron3.gL || '?'}–${pron3.gV || '?'}</span>`;
+    html += `<div class="match-group">
+      <div class="section-label">3.º y 4.º puesto</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius)">
+        <div class="pick-row">
+          <span>${getFlag(pron3.equipoA)} ${pron3.equipoA} <b>vs</b> ${getFlag(pron3.equipoB)} ${pron3.equipoB}</span>
+          ${resultHtml}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  container.innerHTML = html || '<div class="loading">Sin pronósticos de eliminatoria.</div>';
+}
+
+// ── SUBAPARTADO: Pronósticos de TODOS los participantes para cada cruce de eliminatoria ──
+function renderUpcomingEliminatoria() {
+  const container = document.getElementById('upcoming-eliminatoria-content');
+  if (!container) return;
+
+  const NOMBRES_RONDA = { dieciseisavos:'Dieciseisavos', octavos:'Octavos', cuartos:'Cuartos', semifinal:'Semifinal', final:'Final' };
+  let html = '';
+
+  // Para mostrar el partido REAL en el título de cada cruce (en vez del ID
+  // técnico como "R16-1"), resolvemos los dos equipos reales con la misma
+  // lógica que usa el cuadro de Play Off: si el cruce todavía no tiene un
+  // partido fijado en _playoff_partidos, se calculan en vivo desde la
+  // clasificación de grupos (1º/2º de cada grupo + mejores terceros).
+  const rounds = buildPlayoffRounds();
+  const cruceInfoPorMatch = {};
+  rounds.flat().forEach(m => { cruceInfoPorMatch[m.id] = m; });
+  if (rounds.tercerPuesto) cruceInfoPorMatch['tercer-1'] = rounds.tercerPuesto[0];
+
+  const renderCruceTodos = (matchId, faseKey) => {
+    const picksDelCruce = state.pronosticos.filter(p => p.partido_id === matchId && p.jugador !== '_resultados' && p.equipoA);
+    if (!picksDelCruce.length) return '';
+
+    const real = getPlayoffPartidoFijado(matchId);
+    const tieneResultadoReal = real && real.gL !== '' && real.gV !== '' && real.gL != null;
+
+    // Nombre real del cruce: si ya hay un partido fijado, usamos esos
+    // nombres; si no, los equipos calculados en vivo (1º/2º de grupo o
+    // mejor tercero asignado). Si aún no se puede resolver (grupo
+    // incompleto), se queda como interrogantes en vez del ID técnico.
+    const info = cruceInfoPorMatch[matchId];
+    const equipoRealA = (real && real.local) || info?.teamA || '?';
+    const equipoRealB = (real && real.visitante) || info?.teamB || '?';
+    const tituloCruce = `${getFlag(equipoRealA)} ${equipoRealA} <span style="color:var(--muted)">vs</span> ${equipoRealB} ${getFlag(equipoRealB)}`;
+
+    let bloque = `<div style="margin-bottom:1.5rem">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+        <div style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:var(--white)">${tituloCruce}</span>
+          ${tieneResultadoReal ? `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--gold)">${real.gL}-${real.gV}</span>` : `<span style="font-size:0.72rem;color:var(--muted)">⏳ pendiente</span>`}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0">`;
+
+    picksDelCruce.forEach(pick => {
+      const { pts, tipo } = calcPlayoffMatchPoints(pick, real, faseKey);
+      const colorResultado = tipo === 'exact' ? 'var(--lime)' : tipo === 'sign' ? '#9fc050' : tieneResultadoReal ? 'var(--red)' : 'var(--white)';
+      const ptsTag = tieneResultadoReal ? `<div style="font-size:0.65rem;font-weight:700;color:${pts>0?'var(--lime)':'var(--muted)'};margin-top:0.15rem">${pts>0?'+'+pts:'0'}pts</div>` : '';
+      bloque += `<div style="padding:0.6rem 0.6rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border);text-align:center">
+        <div style="font-size:0.68rem;color:var(--muted);font-weight:600;margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pick.jugador}</div>
+        <div style="font-size:0.66rem;color:var(--white);line-height:1.3">${getFlag(pick.equipoA)} ${pick.equipoA}<br>${getFlag(pick.equipoB)} ${pick.equipoB}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${colorResultado};margin-top:0.2rem">${pick.gL||'?'}–${pick.gV||'?'}</div>
+        ${ptsTag}
+      </div>`;
+    });
+
+    bloque += `</div></div></div>`;
+    return bloque;
+  };
+
+  RONDAS_ELIMINATORIA.forEach(ronda => {
+    let seccion = '';
+    ronda.matchIds.forEach(matchId => { seccion += renderCruceTodos(matchId, ronda.faseKey); });
+    if (seccion) {
+      html += `<div class="section-label">${NOMBRES_RONDA[ronda.key]}</div>${seccion}`;
+    }
+  });
+
+  // 3º y 4º puesto aparte
+  const seccion3 = renderCruceTodos('tercer-1', '3er puesto');
+  if (seccion3) {
+    html += `<div class="section-label">3.º y 4.º puesto</div>${seccion3}`;
+  }
+
+  container.innerHTML = html || '<div class="loading">Todavía no hay pronósticos de eliminatoria cargados.</div>';
 }
 
 // ── PREDICCIONES FINALES ──
@@ -4008,6 +4197,13 @@ function switchSubTab(panelName, subName, btn) {
   panel.querySelectorAll('.subtab').forEach(t => t.classList.remove('active'));
   document.getElementById('subpanel-' + panelName + '-' + subName).classList.add('active');
   btn.classList.add('active');
+
+  // En "Próximos", el sub-apartado de Eliminatoria se calcula la primera
+  // vez que se entra en él (no en la carga inicial, para no hacer trabajo
+  // de más si el usuario nunca lo abre).
+  if (panelName === 'upcoming' && subName === 'eliminatoria') {
+    renderUpcomingEliminatoria();
+  }
 }
 
 // ── DEMO DATA (cuando no hay Sheet configurado) ──
