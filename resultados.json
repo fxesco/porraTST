@@ -322,8 +322,8 @@
     {
       "ronda": "dieciseisavos",
       "match": "R16-1",
-      "local": "Corea",
-      "visitante": "Canada",
+      "local": "",
+      "visitante": "",
       "gL": "0",
       "gV": "1",
       "fecha": "28 Jun",
@@ -332,8 +332,8 @@
     {
       "ronda": "dieciseisavos",
       "match": "R16-2",
-      "local": "",
-      "visitante": "",
+      "local": "0",
+      "visitante": "1",
       "gL": "",
       "gV": "",
       "fecha": "29 Jun",
@@ -342,8 +342,8 @@
     {
       "ronda": "dieciseisavos",
       "match": "R16-3",
-      "local": "",
-      "visitante": "",
+      "local": "2",
+      "visitante": "0",
       "gL": "",
       "gV": "",
       "fecha": "29 Jun",
