@@ -332,20 +332,20 @@
     {
       "ronda": "dieciseisavos",
       "match": "R16-2",
-      "local": "0",
-      "visitante": "1",
-      "gL": "",
-      "gV": "",
+      "local": "",
+      "visitante": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "29 Jun",
       "bonus": 1
     },
     {
       "ronda": "dieciseisavos",
       "match": "R16-3",
-      "local": "2",
-      "visitante": "0",
-      "gL": "",
-      "gV": "",
+      "local": "",
+      "visitante": "",
+      "gL": "2",
+      "gV": "0",
       "fecha": "29 Jun",
       "bonus": 1
     },
