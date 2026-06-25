@@ -216,84 +216,84 @@
     "gV": "2"
   },
   "55": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "56": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "57": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "58": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "59": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "60": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "61": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "62": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "63": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "64": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "65": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "66": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "67": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "68": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "69": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "70": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "71": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "72": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "73": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "74": {
-    "gL": "4",
-    "gV": "4"
+    "gL": "",
+    "gV": ""
   },
   "_predicciones": {
     "campeon": "",
@@ -309,7 +309,7 @@
     "balon_bronce": ""
   },
   "_playoff_slots": {
-    "3ABCDF": "Catar",
+    "3ABCDF": "",
     "3CDFGH": "",
     "3CEFHI": "",
     "3EHIJK": "",
@@ -318,60 +318,219 @@
     "3EFGIJ": "",
     "3DEIJL": ""
   },
-  "_playoff_partidos": [],
-  "_ayuda": {
-    "info": "Las claves numericas (1,2,3...) son SIEMPRE partidos de fase de grupos y alimentan la pestaña Grupos. Para partidos de eliminatoria (dieciseisavos en adelante) usa la lista _playoff_partidos.",
-    "ejemplo_playoff_partido": {
+  "_playoff_partidos": [
+    {
       "ronda": "dieciseisavos",
       "match": "R16-1",
-      "local": "Sudafrica",
-      "visitante": "Canada",
+      "local": "",
+      "visitante": "",
       "gL": "",
       "gV": "",
       "fecha": "28 Jun",
       "bonus": 1
     },
-    "matches_disponibles": [
-      {
+    {
       "ronda": "dieciseisavos",
-      "match": "R16-1",
-      "local": "Sudafrica",
-      "visitante": "Canada",
-      "gL": "0",
-      "gV": "1",
-      "fecha": "28 Jun",
+      "match": "R16-2",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "29 Jun",
       "bonus": 1
     },
-      "R16-2",
-      "R16-3",
-      "R16-4",
-      "R16-5",
-      "R16-6",
-      "R16-7",
-      "R16-8",
-      "R16-9",
-      "R16-10",
-      "R16-11",
-      "R16-12",
-      "R16-13",
-      "R16-14",
-      "R16-15",
-      "R16-16",
-      "octavos-1",
-      "octavos-2",
-      "octavos-3",
-      "octavos-4",
-      "octavos-5",
-      "octavos-6",
-      "octavos-7",
-      "octavos-8",
-      "cuartos-1",
-      "cuartos-2",
-      "cuartos-3",
-      "cuartos-4",
-      "semis-1",
-      "semis-2",
-      "final-1"
-    ]
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-3",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "29 Jun",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-4",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "30 Jun",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-5",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "30 Jun",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-6",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "30 Jun",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-7",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "1 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-8",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "1 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-9",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "1 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-10",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "2 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-11",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "2 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-12",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "3 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-13",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "3 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-14",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "3 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-15",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "4 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "dieciseisavos",
+      "match": "R16-16",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "4 Jul",
+      "bonus": 1
+    }
+  ],
+  "_ayuda": {
+    "como_usar": [
+      "1) Partidos de FASE DE GRUPOS: son las claves numericas (\"1\",\"2\"...\"72\"). Solo rellena gL y gV.",
+      "2) Partidos de ELIMINATORIA (dieciseisavos en adelante): estan en _playoff_partidos, ya con un hueco por cada cruce.",
+      "   - local/visitante: dejalos vacios y la web pondra el 1o/2o de grupo automaticamente.",
+      "     Si quieres fijar el nombre tu mismo (p.ej. un tercero clasificado), escribelo ahi y se usara ese en vez del calculo automatico.",
+      "   - gL/gV: vacios mientras el partido no se juega (lo podras pronosticar en la web). En cuanto pongas el resultado, ese cruce queda bloqueado y el cuadro avanza solo.",
+      "3) Cuando acaben los dieciseisavos, añade un nuevo bloque a _playoff_partidos para octavos copiando el formato (match: octavos-1 ... octavos-8), y asi en cada ronda."
+    ],
+    "matches_disponibles_por_ronda": {
+      "dieciseisavos": [
+        "R16-1",
+        "R16-2",
+        "R16-3",
+        "R16-4",
+        "R16-5",
+        "R16-6",
+        "R16-7",
+        "R16-8",
+        "R16-9",
+        "R16-10",
+        "R16-11",
+        "R16-12",
+        "R16-13",
+        "R16-14",
+        "R16-15",
+        "R16-16"
+      ],
+      "octavos": [
+        "octavos-1",
+        "octavos-2",
+        "octavos-3",
+        "octavos-4",
+        "octavos-5",
+        "octavos-6",
+        "octavos-7",
+        "octavos-8"
+      ],
+      "cuartos": [
+        "cuartos-1",
+        "cuartos-2",
+        "cuartos-3",
+        "cuartos-4"
+      ],
+      "semis": [
+        "semis-1",
+        "semis-2"
+      ],
+      "final": [
+        "final-1"
+      ]
+    }
   }
 }

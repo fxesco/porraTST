@@ -442,7 +442,7 @@
 
     .group-table th {
       text-align: center;
-      padding: 0.35rem 0.1rem;
+      padding: 0.35rem 0.15rem;
       font-size: 0.56rem;
       font-weight: 600;
       letter-spacing: 0;
@@ -451,12 +451,17 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .group-table th:first-child,
-    .group-table td.team-cell { width: 30%; }
-    .group-table th:not(:first-child),
-    .group-table td:not(.team-cell) { width: 8.75%; }
+    /* Anchos por columna: # | Equipo | PJ PG PE PP GF GC DG | Pts */
+    .group-table th:nth-child(1),
+    .group-table td:nth-child(1) { width: 7%; }
+    .group-table th:nth-child(2),
+    .group-table td:nth-child(2) { width: 31%; }
+    .group-table th:nth-child(n+3):nth-child(-n+9),
+    .group-table td:nth-child(n+3):nth-child(-n+9) { width: 7%; }
+    .group-table th:nth-child(10),
+    .group-table td:nth-child(10) { width: 10%; }
 
-    .group-table th:first-child { text-align: left; padding-left: 0.5rem; }
+    .group-table th:nth-child(2) { text-align: left; padding-left: 0.4rem; }
 
     .group-table td {
       padding: 0.35rem 0.1rem;
@@ -466,7 +471,7 @@
 
     .group-table td.team-cell {
       text-align: left;
-      padding-left: 0.5rem;
+      padding-left: 0.4rem;
       font-weight: 600;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -665,8 +670,8 @@
 <div class="tabs">
   <button class="tab active" onclick="switchTab('ranking', this)">🏆 Clasificación</button>
   <button class="tab" onclick="switchTab('upcoming', this)">🔜 Próximos</button>
-  <button class="tab" onclick="switchTab('groups', this)">🌍 Grupos</button>
   <button class="tab" onclick="switchTab('playoff', this)">🏟️ Play Off</button>
+  <button class="tab" onclick="switchTab('groups', this)">🌍 Grupos</button>
   <button class="tab" onclick="switchTab('matches', this)">📅 Partidos</button>
   <button class="tab" onclick="switchTab('picks', this)">🎯 Pronósticos</button>
   <button class="tab" onclick="switchTab('champion', this)">⭐ Predicciones</button>
@@ -687,16 +692,16 @@
     <div id="upcoming-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
   </div>
 
-  <!-- ══ GRUPOS ══ -->
-  <div id="panel-groups" class="panel">
-    <div class="section-label">Clasificación por grupos · fase de grupos</div>
-    <div id="groups-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
-  </div>
-
   <!-- ══ PLAY OFF ══ -->
   <div id="panel-playoff" class="panel">
     <div class="section-label">Cuadro eliminatorio · haz clic en el ganador de cada partido</div>
     <div id="playoff-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+  </div>
+
+  <!-- ══ GRUPOS ══ -->
+  <div id="panel-groups" class="panel">
+    <div class="section-label">Clasificación por grupos · fase de grupos</div>
+    <div id="groups-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
   </div>
 
   <!-- ══ MATCHES ══ -->
@@ -2210,7 +2215,7 @@ function renderGroups() {
       <div class="group-card-header">Grupo ${letra}</div>
       <table class="group-table">
         <thead><tr>
-          <th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
+          <th>#</th><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
         </tr></thead>
         <tbody>`;
 
