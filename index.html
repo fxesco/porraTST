@@ -2751,9 +2751,9 @@ function calcPlayoffPointsForPlayer(jugador) {
   // del propio cruce) y puntos de EQUIPO (acertar qué equipo avanza/se
   // clasifica) por separado. Los puntos de "equipo" de cada ronda agrupan
   // TODOS los aciertos de avance relacionados con esa ronda: por ejemplo,
-  // en "dieciseisavos" van tanto el bonus de clasificar de fase de grupos
-  // a dieciseisavos (incluye posición exacta de grupo) como el de acertar
-  // quién avanza de dieciseisavos a octavos.
+  // en "dieciseisavos" va el bonus de acertar qué equipo clasifica de la
+  // fase de grupos a dieciseisavos, y el de acertar quién avanza de
+  // dieciseisavos a octavos.
   const desglose = {
     dieciseisavos: { resultado: 0, equipo: 0 },
     octavos:       { resultado: 0, equipo: 0 },
@@ -2764,34 +2764,25 @@ function calcPlayoffPointsForPlayer(jugador) {
   };
 
   // ── Bonus de FASE DE GRUPOS → DIECISEISAVOS (van dentro de "dieciseisavos.equipo") ──
-  // 1) Clasificado: el jugador predijo que un equipo terminaría 1º o 2º de
-  //    su grupo (por tanto clasificado) y ese equipo realmente lo hizo.
-  // 2) Posición exacta: el jugador acertó la posición exacta (1º/2º/3º/4º).
+  // Un único concepto: el jugador predijo que un equipo terminaría 1º o 2º
+  // EXACTO de su grupo (por tanto clasificado) y ese equipo realmente quedó
+  // en esa misma posición (1º o 2º). Son los mismos 4 puntos tanto si el
+  // acierto es en la posición 1ª como en la 2ª — no hay bonus adicional por
+  // "posición exacta": acertar el 3º o 4º no suma nada porque esos equipos
+  // no clasifican.
   const ptsClasifGrupos = CONFIG.PTS['Fase de grupos']?.clasificado || 0;
-  const ptsPorPosicion = CONFIG.PTS['Fase de grupos']?.posicion || 0;
-  let ptsBonusGrupos = 0, aciertosClasifGrupos = 0, aciertosPosicionGrupos = 0;
+  let ptsBonusGrupos = 0, aciertosClasifGrupos = 0;
   Object.keys(state.groupStandings || {}).forEach(letra => {
     const posPick = picks.find(p => p.partido_id === `pos-${letra}`);
     if (!posPick) return;
     const tabla = state.groupStandings[letra] || [];
-    for (let pos = 1; pos <= 4; pos++) {
+    for (let pos = 1; pos <= 2; pos++) {
       const equipoPron = posPick[`pos${pos}`];
       const equipoRealEnEstaPos = tabla[pos-1]?.equipo;
-      if (!equipoPron) continue;
-
-      // Posición exacta
-      if (equipoRealEnEstaPos && normEquipo(equipoPron) === normEquipo(equipoRealEnEstaPos)) {
-        ptsBonusGrupos += ptsPorPosicion;
-        aciertosPosicionGrupos++;
-      }
-
-      // Clasificado (1º o 2º real, en cualquier posición exacta)
-      if (pos <= 2) {
-        const clasificadosReales = [tabla[0]?.equipo, tabla[1]?.equipo].filter(Boolean).map(normEquipo);
-        if (clasificadosReales.includes(normEquipo(equipoPron))) {
-          ptsBonusGrupos += ptsClasifGrupos;
-          aciertosClasifGrupos++;
-        }
+      if (!equipoPron || !equipoRealEnEstaPos) continue;
+      if (normEquipo(equipoPron) === normEquipo(equipoRealEnEstaPos)) {
+        ptsBonusGrupos += ptsClasifGrupos;
+        aciertosClasifGrupos++;
       }
     }
   });
@@ -2858,7 +2849,6 @@ function calcPlayoffPointsForPlayer(jugador) {
     .filter(k => k !== 'total')
     .reduce((sum, k) => sum + desglose[k].total, 0);
   desglose.aciertosClasifGrupos = aciertosClasifGrupos;
-  desglose.aciertosPosicionGrupos = aciertosPosicionGrupos;
 
   return desglose;
 }
@@ -2921,7 +2911,6 @@ function buildRanking() {
       tercerPuesto: elim.tercerPuesto,
       final: elim.final,
       aciertosClasifGrupos: elim.aciertosClasifGrupos,
-      aciertosPosicionGrupos: elim.aciertosPosicionGrupos,
       ptsPredicciones, aciertosPredicciones,
       ptsPremios, aciertosPremios,
     };
@@ -3003,7 +2992,7 @@ function renderRanking() {
   html += '</tbody></table></div>';
   html += `<div style="margin-top:0.75rem;font-size:0.72rem;color:var(--muted);line-height:1.5">
     <strong style="color:var(--white)">Grupos:</strong> Ex = resultados exactos, Si = solo signo acertado (solo puntos por el resultado de cada partido).
-    <strong style="color:var(--white)">16avos:</strong> Res = resultado de los cruces de dieciseisavos. Eq = puntos por equipo: incluye acertar qué selecciones clasifican de la fase de grupos (posición exacta + clasificado) y qué equipos avanzan a octavos.
+    <strong style="color:var(--white)">16avos:</strong> Res = resultado de los cruces de dieciseisavos. Eq = puntos por equipo: acertar qué selecciones clasifican de la fase de grupos (1º/2º exacto de cada grupo) y qué equipos avanzan a octavos.
     <strong style="color:var(--white)">Resto de rondas:</strong> Res = resultado del cruce, Eq = acertar el equipo que avanza a la siguiente ronda.
     <br>Haz clic en cualquier número para ver el detalle completo.
   </div>`;
@@ -3055,28 +3044,26 @@ function showDetalle(jugador, concepto) {
     const nombres = { dieciseisavos:'Dieciseisavos', octavos:'Octavos', cuartos:'Cuartos', semifinal:'Semifinal', tercerPuesto:'3º/4º puesto', final:'Final' };
     titulo = `${nombres[concepto]} · ${jugador}`;
 
-    // Bonus de fase de grupos → dieciseisavos (solo aparece en esta ronda)
+    // Bonus de fase de grupos → dieciseisavos (solo aparece en esta ronda).
+    // Único concepto: acertar el equipo que clasifica en la posición 1ª o 2ª
+    // exacta de su grupo. No hay puntos extra por "posición exacta": acertar
+    // el 3º o 4º no suma nada porque esos equipos no clasifican.
     if (concepto === 'dieciseisavos') {
       const ptsClasifGrupos = CONFIG.PTS['Fase de grupos']?.clasificado || 0;
-      const ptsPorPosicion = CONFIG.PTS['Fase de grupos']?.posicion || 0;
       Object.keys(state.groupStandings || {}).sort().forEach(letra => {
         const posPick = picks.find(p => p.partido_id === `pos-${letra}`);
         if (!posPick) return;
         const tabla = state.groupStandings[letra] || [];
-        const clasificadosReales = [tabla[0]?.equipo, tabla[1]?.equipo].filter(Boolean).map(normEquipo);
-        for (let pos = 1; pos <= 4; pos++) {
+        for (let pos = 1; pos <= 2; pos++) {
           const equipoPron = posPick[`pos${pos}`];
           if (!equipoPron) continue;
           const equipoRealEnEstaPos = tabla[pos-1]?.equipo;
-          let pts = 0; const subPartes = [];
           if (equipoRealEnEstaPos && normEquipo(equipoPron) === normEquipo(equipoRealEnEstaPos)) {
-            pts += ptsPorPosicion; subPartes.push(`posición ${pos}º exacta +${ptsPorPosicion}`);
-          }
-          if (pos <= 2 && clasificadosReales.includes(normEquipo(equipoPron))) {
-            pts += ptsClasifGrupos; subPartes.push(`clasificado a 16avos +${ptsClasifGrupos}`);
-          }
-          if (pts > 0) {
-            filas.push({ label: `Grupo ${letra}, ${pos}º pronosticado: ${getFlag(equipoPron)} ${equipoPron}`, pts, sub: subPartes.join(' · ') });
+            filas.push({
+              label: `Grupo ${letra}, ${pos}º pronosticado: ${getFlag(equipoPron)} ${equipoPron}`,
+              pts: ptsClasifGrupos,
+              sub: `equipo clasificado en ${pos}º posición exacta`
+            });
           }
         }
       });
@@ -3852,20 +3839,18 @@ function renderPicks() {
   // ── Posiciones de grupo pronosticadas (1º/2º/3º/4º por cada uno de los 12 grupos) ──
   const letrasGrupos = Object.keys(state.groupStandings || {}).sort();
   if (letrasGrupos.length) {
-    const ptsPorPosicion = CONFIG.PTS['Fase de grupos']?.posicion || 0;
     const ptsClasifGrupos = CONFIG.PTS['Fase de grupos']?.clasificado || 0;
     html += `<div class="section-label">¿Quién pronosticó que clasificaría en cada grupo?</div>`;
     html += `<div style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;line-height:1.5">
-      Antes de empezar el torneo, ${jugador} predijo el orden de cada grupo. La columna <strong style="color:var(--white)">"Clasificación real (hoy)"</strong>
+      Antes de empezar el torneo, ${jugador} predijo el orden de cada grupo. La columna <strong style="color:var(--white)">"Clasif. real (hoy)"</strong>
       es la tabla actual del Mundial, que se va actualizando con cada resultado — por eso puede cambiar de un día a otro.
-      <span style="color:var(--lime)">✓ verde</span> = ese acierto ya suma puntos ahora mismo: posición exacta (+${ptsPorPosicion} pts) o estar entre los 2 primeros que clasifican (+${ptsClasifGrupos} pts).
-      Sin marca = ese pronóstico no coincide con la clasificación actual (de momento).
+      <span style="color:var(--lime)">✓ verde</span> = ${jugador} acertó qué equipo queda exactamente 1º o 2º de su grupo (clasificado) → suma +${ptsClasifGrupos} pts.
+      Acertar el 3º o 4º puesto no suma puntos, porque esos equipos no se clasifican.
     </div>`;
     html += `<div class="groups-grid" style="margin-bottom:1.5rem">`;
     letrasGrupos.forEach(letra => {
       const posPick = picks.find(p => p.partido_id === `pos-${letra}`);
       const real = state.groupStandings[letra] || [];
-      const clasificadosReales = [real[0]?.equipo, real[1]?.equipo].filter(Boolean).map(normEquipo);
       html += `<div class="group-card">
         <div class="group-card-header">Grupo ${letra}</div>
         <table class="group-table" style="font-size:0.74rem">
@@ -3874,12 +3859,12 @@ function renderPicks() {
       for (let pos = 1; pos <= 4; pos++) {
         const equipoPron = posPick ? posPick[`pos${pos}`] : '';
         const equipoReal = real[pos-1]?.equipo || '';
-        const posExacta = equipoPron && equipoReal && normEquipo(equipoPron) === normEquipo(equipoReal);
-        const esClasificado = pos <= 2 && equipoPron && clasificadosReales.includes(normEquipo(equipoPron));
-        let marca = '';
-        if (posExacta) marca = ` ✓+${ptsPorPosicion}`;
-        else if (esClasificado) marca = ` ✓+${ptsClasifGrupos}`;
-        const color = (posExacta || esClasificado) ? 'color:var(--lime);font-weight:700' : '';
+        // Solo cuenta como acierto puntuable si pos es 1ª o 2ª Y coincide
+        // exactamente con quien quedó en esa misma posición. 3º/4º nunca
+        // suman, aunque coincidan, porque esos equipos no clasifican.
+        const esAciertoPuntuable = pos <= 2 && equipoPron && equipoReal && normEquipo(equipoPron) === normEquipo(equipoReal);
+        const marca = esAciertoPuntuable ? ` ✓+${ptsClasifGrupos}` : '';
+        const color = esAciertoPuntuable ? 'color:var(--lime);font-weight:700' : '';
         html += `<tr class="${pos<=2?'qualify':''} ${pos===2?'qualify-divider':''}">
           <td class="pos-cell">${pos}</td>
           <td class="team-cell" style="${color}">${equipoPron ? getFlag(equipoPron)+' '+equipoPron : '—'}${marca}</td>
