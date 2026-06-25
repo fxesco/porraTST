@@ -499,6 +499,16 @@
       border-bottom: 2px dashed var(--border) !important;
     }
 
+    /* Mejores Terceros: 8 columnas (#, Equipo, Grp, PJ, GF, GC, DG, Pts) */
+    .thirds-table th:nth-child(n),
+    .thirds-table td:nth-child(n) { width: auto; }
+    .thirds-table th:nth-child(1), .thirds-table td:nth-child(1) { width: 8%; }
+    .thirds-table th:nth-child(2), .thirds-table td:nth-child(2) { width: 36%; }
+    .thirds-table th:nth-child(3), .thirds-table td:nth-child(3) { width: 10%; }
+    .thirds-table th:nth-child(n+4):nth-child(-n+7),
+    .thirds-table td:nth-child(n+4):nth-child(-n+7) { width: 9.5%; }
+    .thirds-table th:nth-child(8), .thirds-table td:nth-child(8) { width: 12%; }
+
     /* ── PLAY OFF ── */
     .playoff-wrapper {
       overflow-x: auto;
@@ -565,6 +575,13 @@
 
     .po-slot:last-child { border-bottom: none; }
     .po-slot:hover { background: rgba(255,255,255,0.05); }
+
+    .po-score {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
 
     .po-slot.placeholder {
       color: var(--muted);
@@ -1835,6 +1852,9 @@ _resultados,predicciones,,,,,,,,,,,
 _resultados,premios,,,,,,,,,,,
 `;
 const EQUIPO_GRUPO = {"República Checa": "A", "Sudáfrica": "A", "México": "A", "Corea del Sur": "A", "Catar": "B", "Bosnia y Herzegovina": "B", "Suiza": "B", "Canadá": "B", "Haití": "C", "Marruecos": "C", "Escocia": "C", "Brasil": "C", "Estados Unidos": "D", "Paraguay": "D", "Australia": "D", "Turquía": "D", "Alemania": "E", "Curazao": "E", "Ecuador": "E", "Costa de Marfil": "E", "Suecia": "F", "Japón": "F", "Países Bajos": "F", "Túnez": "F", "Irán": "G", "Nueva Zelanda": "G", "Bélgica": "G", "Egipto": "G", "Arabia Saudita": "H", "España": "H", "Cabo Verde": "H", "Uruguay": "H", "Irak": "I", "Senegal": "I", "Francia": "I", "Noruega": "I", "Argelia": "J", "Argentina": "J", "Jordania": "J", "Austria": "J", "RD Congo": "K", "Uzbekistán": "K", "Portugal": "K", "Colombia": "K", "Inglaterra": "L", "Croacia": "L", "Ghana": "L", "Panamá": "L"};
+const EQUIPO_BANDERA = {"República Checa": "🇨🇿", "Sudáfrica": "🇿🇦", "México": "🇲🇽", "Corea del Sur": "🇰🇷", "Catar": "🇶🇦", "Bosnia y Herzegovina": "🇧🇦", "Suiza": "🇨🇭", "Canadá": "🇨🇦", "Haití": "🇭🇹", "Marruecos": "🇲🇦", "Escocia": "🏴", "Brasil": "🇧🇷", "Estados Unidos": "🇺🇸", "Paraguay": "🇵🇾", "Australia": "🇦🇺", "Turquía": "🇹🇷", "Alemania": "🇩🇪", "Curazao": "🇨🇼", "Ecuador": "🇪🇨", "Costa de Marfil": "🇨🇮", "Suecia": "🇸🇪", "Japón": "🇯🇵", "Países Bajos": "🇳🇱", "Túnez": "🇹🇳", "Irán": "🇮🇷", "Nueva Zelanda": "🇳🇿", "Bélgica": "🇧🇪", "Egipto": "🇪🇬", "Arabia Saudita": "🇸🇦", "España": "🇪🇸", "Cabo Verde": "🇨🇻", "Uruguay": "🇺🇾", "Irak": "🇮🇶", "Senegal": "🇸🇳", "Francia": "🇫🇷", "Noruega": "🇳🇴", "Argelia": "🇩🇿", "Argentina": "🇦🇷", "Jordania": "🇯🇴", "Austria": "🇦🇹", "RD Congo": "🇨🇩", "Uzbekistán": "🇺🇿", "Portugal": "🇵🇹", "Colombia": "🇨🇴", "Inglaterra": "🏴", "Croacia": "🇭🇷", "Ghana": "🇬🇭", "Panamá": "🇵🇦"};
+function getFlag(equipo) { return EQUIPO_BANDERA[equipo] || ''; }
+
 
 // ══════════════════════════════════════════════
 
@@ -2197,6 +2217,22 @@ function buildGroupStandings() {
   return resultado;
 }
 
+// Extrae el 3er clasificado de cada grupo y los ordena entre sí
+// (puntos → diferencia de goles → goles a favor), igual que hace la FIFA
+// para decidir qué 8 de los 12 terceros pasan a dieciseisavos.
+function buildBestThirds() {
+  const standings = buildGroupStandings();
+  const terceros = [];
+  Object.keys(standings).sort().forEach(letra => {
+    const equipos = standings[letra];
+    if (equipos[2]) {
+      terceros.push({ ...equipos[2], grupo: letra });
+    }
+  });
+  terceros.sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf);
+  return terceros;
+}
+
 function renderGroups() {
   const standings = buildGroupStandings();
   const letras = Object.keys(standings);
@@ -2224,7 +2260,7 @@ function renderGroups() {
       const dividerClass = i === 1 ? 'qualify-divider' : '';
       html += `<tr class="${qualifyClass} ${dividerClass}">
         <td class="pos-cell">${i+1}</td>
-        <td class="team-cell">${e.equipo}</td>
+        <td class="team-cell">${getFlag(e.equipo)} ${e.equipo}</td>
         <td>${e.pj}</td><td>${e.pg}</td><td>${e.pe}</td><td>${e.pp}</td>
         <td>${e.gf}</td><td>${e.gc}</td><td>${e.dg > 0 ? '+' : ''}${e.dg}</td>
         <td class="pts-cell">${e.pts}</td>
@@ -2235,6 +2271,35 @@ function renderGroups() {
   });
 
   html += '</div>';
+
+  // ── Mejores Terceros ──
+  const terceros = buildBestThirds();
+  if (terceros.length) {
+    html += `<div class="section-label" style="margin-top:1.75rem">Mejores Terceros · 8 de 12 clasifican a dieciseisavos</div>`;
+    html += `<div class="group-card" style="max-width:480px">
+      <div class="group-card-header">🌍 Mejores Terceros</div>
+      <table class="group-table thirds-table">
+        <thead><tr>
+          <th>#</th><th>Equipo</th><th>Grp</th><th>PJ</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
+        </tr></thead>
+        <tbody>`;
+
+    terceros.forEach((e, i) => {
+      const qualifyClass = i < 8 ? 'qualify' : '';
+      const dividerClass = i === 7 ? 'qualify-divider' : '';
+      html += `<tr class="${qualifyClass} ${dividerClass}">
+        <td class="pos-cell">${i+1}</td>
+        <td class="team-cell">${getFlag(e.equipo)} ${e.equipo}</td>
+        <td style="font-weight:600;color:var(--muted)">${e.grupo}</td>
+        <td>${e.pj}</td>
+        <td>${e.gf}</td><td>${e.gc}</td><td>${e.dg > 0 ? '+' : ''}${e.dg}</td>
+        <td class="pts-cell">${e.pts}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+  }
+
   html += `<div style="margin-top:1rem;font-size:0.75rem;color:var(--muted)">
     <span style="color:var(--lime)">●</span> Clasificado para dieciseisavos (1º y 2º de grupo)
   </div>`;
@@ -2409,7 +2474,13 @@ function renderPlayoff() {
       const teamB = m.teamB;
       const matchCls = locked ? 'po-match locked' : 'po-match';
 
-      const slotHtml = (team, side) => {
+      // Si el partido está fijado con resultado real, mostramos el marcador
+      const fijado = m.fijado;
+      const tieneResultado = fijado && fijado.gL !== '' && fijado.gV !== '' && fijado.gL != null && fijado.gV != null;
+      const golesA = tieneResultado ? fijado.gL : null;
+      const golesB = tieneResultado ? fijado.gV : null;
+
+      const slotHtml = (team, side, goles) => {
         if (!team) {
           return `<div class="po-slot placeholder">⏳ Pendiente</div>`;
         }
@@ -2419,14 +2490,16 @@ function renderPlayoff() {
         const cursorCls = locked ? 'readonly' : '';
         const cls = `po-slot ${isWinner?'winner':''} ${isLoser?'loser':''} ${cursorCls}`;
         const lockIcon = (locked && isWinner) ? ' ✓' : '';
+        const scoreHtml = goles !== null ? `<span class="po-score">${goles}</span>` : '';
         return `<div class="${cls}" ${clickAttr}>
-          <span>${team}${lockIcon}</span>
+          <span>${getFlag(team)} ${team}${lockIcon}</span>
+          ${scoreHtml}
         </div>`;
       };
 
       html += `<div class="${matchCls}">
-        ${slotHtml(teamA, 'A')}
-        ${slotHtml(teamB, 'B')}
+        ${slotHtml(teamA, 'A', golesA)}
+        ${slotHtml(teamB, 'B', golesB)}
       </div>`;
     });
 
@@ -2452,7 +2525,8 @@ function renderPlayoff() {
   html += `<div style="margin-top:1rem;font-size:0.75rem;color:var(--muted);line-height:1.6">
     <span style="color:var(--lime)">●</span> 1º/2º de cada grupo se actualizan solos según la clasificación en vivo.
     <span style="color:var(--gold)">●</span> Las etiquetas como <strong style="color:var(--white)">3ABCDF</strong> ("mejor 3º entre A,B,C,D,F")
-    se fijan manualmente cuando la FIFA confirme la combinación oficial.
+    se fijan manualmente en resultados.json cuando la FIFA confirme la combinación oficial — consulta la pestaña
+    <strong style="color:var(--white)">🌍 Grupos → Mejores Terceros</strong> para ver qué 8 equipos clasifican.
     Los partidos con <strong style="color:var(--white)">✓ resultado real</strong> quedan bloqueados; el resto puedes pronosticarlos haciendo clic en el ganador.
   </div>`;
 
