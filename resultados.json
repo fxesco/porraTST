@@ -322,10 +322,10 @@
     {
       "ronda": "dieciseisavos",
       "match": "R16-1",
-      "local": "",
-      "visitante": "",
-      "gL": "",
-      "gV": "",
+      "local": "Corea",
+      "visitante": "Canada",
+      "gL": "0",
+      "gV": "1",
       "fecha": "28 Jun",
       "bonus": 1
     },
