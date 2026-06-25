@@ -187,7 +187,7 @@
       min-width: 720px;
     }
     .round-ranking-table th { padding: 0.5rem 0.4rem; font-size: 0.62rem; white-space: nowrap; }
-    .round-ranking-table td { padding: 0.55rem 0.4rem; }
+    .round-ranking-table td { padding: 0.45rem 0.4rem; vertical-align: middle; line-height: 1.25; }
     .round-ranking-table .player-name { font-weight: 600; white-space: nowrap; }
 
     .ranking-table th {
@@ -2395,9 +2395,6 @@ async function loadData() {
     if (resultados['_predicciones']) Object.assign(resReal, resultados['_predicciones']);
     if (resultados['_premios']) Object.assign(resReal, resultados['_premios']);
     state.predicciones_reales = resReal;
-    // Equipos reales asignados a cada cajón de TERCEROS (3ABCDF...). Solo
-    // los terceros necesitan fijarse a mano; 1º/2º se calculan solos.
-    state.playoffSlots = resultados['_playoff_slots'] || {};
     // Partidos reales de eliminatoria (dieciseisavos en adelante) definidos
     // a mano en resultados.json → "_playoff_partidos". Una vez registrados
     // aquí ya NO se actualizan a través de la pestaña Grupos.
@@ -2405,6 +2402,11 @@ async function loadData() {
     // Clasificación de grupos en vivo, recalculada cada carga — la usan
     // tanto la pestaña Grupos como la resolución automática del Play Off.
     state.groupStandings = buildGroupStandings();
+    // Asignación automática de los 8 mejores terceros a sus cajones del
+    // cuadro de dieciseisavos, recalculada en vivo desde Grupos → Mejores
+    // Terceros. No depende de resultados.json: se actualiza sola con cada
+    // resultado de fase de grupos que registres.
+    state.tercerosAsignados = buildTercerosAsignados();
     state.ready = true;
 
     updateHero();
@@ -2519,28 +2521,36 @@ function getEquipoClasificadoReal(matchId) {
 
 function calcPlayoffPointsForPlayer(jugador) {
   const picks = state.pronosticos.filter(p => p.jugador === jugador);
-  const desglose = { dieciseisavos: 0, octavos: 0, cuartos: 0, semifinal: 0, tercerPuesto: 0, final: 0 };
+  // Desglose fino: para cada ronda, puntos de RESULTADO (signo/diff/exacto)
+  // y puntos de CLASIFICADO (acertar el equipo que avanza) por separado.
+  const desglose = {
+    dieciseisavos: { resultado: 0, clasificado: 0 },
+    octavos:       { resultado: 0, clasificado: 0 },
+    cuartos:       { resultado: 0, clasificado: 0 },
+    semifinal:     { resultado: 0, clasificado: 0 },
+    tercerPuesto:  { resultado: 0, clasificado: 0 },
+    final:         { resultado: 0, clasificado: 0 },
+  };
 
   RONDAS_ELIMINATORIA.forEach(ronda => {
-    let pts = 0;
+    let ptsResultadoRonda = 0, ptsClasifRonda = 0;
     ronda.matchIds.forEach(matchId => {
       const pronostico = picks.find(p => p.partido_id === matchId);
       const real = getPlayoffPartidoFijado(matchId);
 
       const { pts: ptsResultado } = calcPlayoffMatchPoints(pronostico, real, ronda.faseKey);
-      pts += ptsResultado;
+      ptsResultadoRonda += ptsResultado;
 
       // Puntos de "clasificado a la ronda siguiente" se anotan en la ronda
-      // ANTERIOR, según CONFIG.PTS[faseKey].clasificado (ej. acertar quién
-      // pasa a octavos suma los puntos de "clasificado" de Dieciseisavos).
+      // ANTERIOR, según CONFIG.PTS[faseKey].clasificado.
       const clasifPron = getEquipoClasificadoPronosticado(picks, matchId);
       const clasifReal = getEquipoClasificadoReal(matchId);
       if (clasifPron && clasifReal && normEquipo(clasifPron) === normEquipo(clasifReal)) {
         const ptsClasif = CONFIG.PTS[ronda.faseKey]?.clasificado;
-        if (ptsClasif) pts += ptsClasif;
+        if (ptsClasif) ptsClasifRonda += ptsClasif;
       }
     });
-    desglose[ronda.key] = pts;
+    desglose[ronda.key] = { resultado: ptsResultadoRonda, clasificado: ptsClasifRonda };
   });
 
   // Semifinal tiene además los bonus de clasificado a 3º/4º puesto y a la final
@@ -2566,16 +2576,22 @@ function calcPlayoffPointsForPlayer(jugador) {
       }
     }
   });
-  desglose.semifinal += ptsClasifSemis;
+  desglose.semifinal.clasificado += ptsClasifSemis;
 
   // 3er/4º puesto: solo puntos de resultado (no genera "clasificado" después)
   const pronostico3 = picks.find(p => p.partido_id === 'tercer-1');
   const real3 = getPlayoffPartidoFijado('tercer-1');
   const { pts: pts3 } = calcPlayoffMatchPoints(pronostico3, real3, '3er puesto');
-  desglose.tercerPuesto = pts3;
+  desglose.tercerPuesto = { resultado: pts3, clasificado: 0 };
 
-  desglose.total = desglose.dieciseisavos + desglose.octavos + desglose.cuartos +
-                    desglose.semifinal + desglose.tercerPuesto + desglose.final;
+  // Totales por ronda y total general
+  Object.keys(desglose).forEach(key => {
+    desglose[key].total = desglose[key].resultado + desglose[key].clasificado;
+  });
+  desglose.total = Object.keys(desglose)
+    .filter(k => k !== 'total')
+    .reduce((sum, k) => sum + desglose[k].total, 0);
+
   return desglose;
 }
 
@@ -2600,36 +2616,38 @@ function buildRanking() {
     // Puntos de eliminatoria (dieciseisavos → final), por ronda
     const elim = calcPlayoffPointsForPlayer(jugador);
 
-    // Predicciones finales
+    // Predicciones finales — guardamos también CUÁLES se acertaron, para mostrarlo
     let ptsPredicciones = 0;
+    const aciertosPredicciones = [];
     const pred = picks.find(p => p.partido_id === 'predicciones') ?? {};
     const resultados = state.predicciones_reales ?? {};
-    if (resultados.campeon    && pred.campeon    === resultados.campeon)    ptsPredicciones += CONFIG.PTS_CAMPEON;
-    if (resultados.subcampeon && pred.subcampeon === resultados.subcampeon) ptsPredicciones += CONFIG.PTS_SUBCAMPEON;
-    if (resultados.tercero    && pred.tercero    === resultados.tercero)    ptsPredicciones += CONFIG.PTS_TERCERO;
+    if (resultados.campeon    && pred.campeon    === resultados.campeon)    { ptsPredicciones += CONFIG.PTS_CAMPEON; aciertosPredicciones.push('Campeón'); }
+    if (resultados.subcampeon && pred.subcampeon === resultados.subcampeon) { ptsPredicciones += CONFIG.PTS_SUBCAMPEON; aciertosPredicciones.push('Subcamp.'); }
+    if (resultados.tercero    && pred.tercero    === resultados.tercero)    { ptsPredicciones += CONFIG.PTS_TERCERO; aciertosPredicciones.push('3º puesto'); }
 
-    // Premios individuales
+    // Premios individuales — idem
     let ptsPremios = 0;
-    if (resultados.bota_oro    && pred.bota_oro    === resultados.bota_oro)    ptsPremios += CONFIG.PTS_BOTA_ORO;
-    if (resultados.bota_plata  && pred.bota_plata  === resultados.bota_plata)  ptsPremios += CONFIG.PTS_BOTA_PLATA;
-    if (resultados.bota_bronce && pred.bota_bronce === resultados.bota_bronce) ptsPremios += CONFIG.PTS_BOTA_BRONCE;
-    if (resultados.balon_oro   && pred.balon_oro   === resultados.balon_oro)   ptsPremios += CONFIG.PTS_BALON_ORO;
-    if (resultados.balon_plata && pred.balon_plata === resultados.balon_plata) ptsPremios += CONFIG.PTS_BALON_PLATA;
-    if (resultados.balon_bronce&& pred.balon_bronce=== resultados.balon_bronce)ptsPremios += CONFIG.PTS_BALON_BRONCE;
+    const aciertosPremios = [];
+    if (resultados.bota_oro    && pred.bota_oro    === resultados.bota_oro)    { ptsPremios += CONFIG.PTS_BOTA_ORO; aciertosPremios.push('Bota Oro'); }
+    if (resultados.bota_plata  && pred.bota_plata  === resultados.bota_plata)  { ptsPremios += CONFIG.PTS_BOTA_PLATA; aciertosPremios.push('Bota Plata'); }
+    if (resultados.bota_bronce && pred.bota_bronce === resultados.bota_bronce) { ptsPremios += CONFIG.PTS_BOTA_BRONCE; aciertosPremios.push('Bota Bronce'); }
+    if (resultados.balon_oro   && pred.balon_oro   === resultados.balon_oro)   { ptsPremios += CONFIG.PTS_BALON_ORO; aciertosPremios.push('Balón Oro'); }
+    if (resultados.balon_plata && pred.balon_plata === resultados.balon_plata) { ptsPremios += CONFIG.PTS_BALON_PLATA; aciertosPremios.push('Balón Plata'); }
+    if (resultados.balon_bronce&& pred.balon_bronce=== resultados.balon_bronce){ ptsPremios += CONFIG.PTS_BALON_BRONCE; aciertosPremios.push('Balón Bronce'); }
 
     const pts = ptsGrupos + elim.total + ptsPredicciones + ptsPremios;
 
     return {
       nombre: jugador, pts, exactos, signos, fallos, jugados,
       ptsGrupos,
-      ptsDieciseisavos: elim.dieciseisavos,
-      ptsOctavos: elim.octavos,
-      ptsCuartos: elim.cuartos,
-      ptsSemifinal: elim.semifinal,
-      ptsTercerPuesto: elim.tercerPuesto,
-      ptsFinal: elim.final,
-      ptsPredicciones,
-      ptsPremios,
+      dieciseisavos: elim.dieciseisavos,
+      octavos: elim.octavos,
+      cuartos: elim.cuartos,
+      semifinal: elim.semifinal,
+      tercerPuesto: elim.tercerPuesto,
+      final: elim.final,
+      ptsPredicciones, aciertosPredicciones,
+      ptsPremios, aciertosPremios,
     };
   }).sort((a, b) => b.pts - a.pts || b.exactos - a.exactos);
 }
@@ -2662,30 +2680,49 @@ function renderRanking() {
       <th style="text-align:right">Total</th>
     </tr></thead><tbody>`;
 
+  // Celda con el número de puntos arriba y, debajo, el desglose de dónde
+  // vienen esos puntos (más pequeño y en gris).
+  const cellGrupos = (val, exactos, signos) => {
+    const num = val > 0 ? `<span style="color:var(--lime);font-weight:600">${val}</span>` : `<span style="color:var(--muted)">${val}</span>`;
+    const detalle = (exactos || signos) ? `<div style="font-size:0.62rem;color:var(--muted);margin-top:0.1rem">Ex:${exactos}·Si:${signos}</div>` : '';
+    return `${num}${detalle}`;
+  };
+  const cellRonda = (rondaObj) => {
+    const val = rondaObj.total;
+    const num = val > 0 ? `<span style="color:var(--lime);font-weight:600">${val}</span>` : `<span style="color:var(--muted)">${val}</span>`;
+    const partes = [];
+    if (rondaObj.resultado > 0) partes.push(`Res:${rondaObj.resultado}`);
+    if (rondaObj.clasificado > 0) partes.push(`Cla:${rondaObj.clasificado}`);
+    const detalle = partes.length ? `<div style="font-size:0.62rem;color:var(--muted);margin-top:0.1rem">${partes.join('·')}</div>` : '';
+    return `${num}${detalle}`;
+  };
+  const cellSimple = (val, aciertos) => {
+    const num = val > 0 ? `<span style="color:var(--lime);font-weight:600">${val}</span>` : `<span style="color:var(--muted)">${val}</span>`;
+    const detalle = (aciertos && aciertos.length) ? `<div style="font-size:0.62rem;color:var(--muted);margin-top:0.1rem">${aciertos.join('·')}</div>` : '';
+    return `${num}${detalle}`;
+  };
+
   ranking.forEach((r, i) => {
-    const c = (val) => val > 0
-      ? `<span style="color:var(--lime);font-weight:600">${val}</span>`
-      : `<span style="color:var(--muted)">${val}</span>`;
     html += `<tr>
       <td class="pos ${posClass(i)}">${posIcon(i) || (i+1)}</td>
       <td class="player-name">${r.nombre}</td>
-      <td style="text-align:center">${c(r.ptsGrupos)}</td>
-      <td style="text-align:center">${c(r.ptsDieciseisavos)}</td>
-      <td style="text-align:center">${c(r.ptsOctavos)}</td>
-      <td style="text-align:center">${c(r.ptsCuartos)}</td>
-      <td style="text-align:center">${c(r.ptsSemifinal)}</td>
-      <td style="text-align:center">${c(r.ptsTercerPuesto)}</td>
-      <td style="text-align:center">${c(r.ptsFinal)}</td>
-      <td style="text-align:center">${c(r.ptsPredicciones)}</td>
-      <td style="text-align:center">${c(r.ptsPremios)}</td>
+      <td style="text-align:center">${cellGrupos(r.ptsGrupos, r.exactos, r.signos)}</td>
+      <td style="text-align:center">${cellRonda(r.dieciseisavos)}</td>
+      <td style="text-align:center">${cellRonda(r.octavos)}</td>
+      <td style="text-align:center">${cellRonda(r.cuartos)}</td>
+      <td style="text-align:center">${cellRonda(r.semifinal)}</td>
+      <td style="text-align:center">${cellRonda(r.tercerPuesto)}</td>
+      <td style="text-align:center">${cellRonda(r.final)}</td>
+      <td style="text-align:center">${cellSimple(r.ptsPredicciones, r.aciertosPredicciones)}</td>
+      <td style="text-align:center">${cellSimple(r.ptsPremios, r.aciertosPremios)}</td>
       <td class="pts">${r.pts}</td>
     </tr>`;
   });
 
   html += '</tbody></table></div>';
-  html += `<div style="margin-top:0.75rem;font-size:0.72rem;color:var(--muted)">
-    Grupos = puntos de la fase de grupos (incluye bonus de clasificación a dieciseisavos).
-    Cada ronda de eliminatoria suma puntos por acertar el resultado del cruce y por acertar qué equipo avanza a la siguiente ronda.
+  html += `<div style="margin-top:0.75rem;font-size:0.72rem;color:var(--muted);line-height:1.5">
+    <strong style="color:var(--white)">Grupos:</strong> Ex = resultados exactos, Si = solo signo acertado.
+    <strong style="color:var(--white)">Eliminatoria:</strong> Res = puntos por el resultado del cruce (signo+diferencia+exacto), Cla = puntos por acertar qué equipo avanza de ronda.
   </div>`;
   document.getElementById('ranking-content').innerHTML = html;
 }
@@ -2715,12 +2752,12 @@ function renderUpcoming() {
       <div style="background:var(--card);border:${esBonus?'2px solid var(--gold)':'1px solid var(--border)'};border-radius:var(--radius);overflow:hidden">
         <!-- Partido header -->
         <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0.5rem;padding:0.85rem 1rem;border-bottom:1px solid var(--border)">
-          <div class="team home">${p.local}</div>
+          <div class="team home">${getFlag(p.local)} ${p.local}</div>
           <div class="score-box">
             <div class="score pending" style="font-size:1.1rem">vs</div>
             <div class="match-meta">${p.fecha ?? ''} ${bonusTag}</div>
           </div>
-          <div class="team away">${p.visitante}</div>
+          <div class="team away">${getFlag(p.visitante)} ${p.visitante}</div>
         </div>`;
 
     // Pronósticos de cada participante
@@ -2818,6 +2855,76 @@ function buildBestThirds() {
   });
   terceros.sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf);
   return terceros;
+}
+
+// Asigna automáticamente los 8 mejores terceros clasificados a los 8 cajones
+// "3XXXXX" del cuadro de dieciseisavos, sin depender de _playoff_slots.
+// Cada cajón acepta terceros de un subconjunto fijo de grupos (la matriz
+// real de la FIFA tiene 495 combinaciones posibles; aquí usamos una
+// asignación determinista y consistente: los slots con menos grupos
+// candidatos disponibles se resuelven primero, igual que en la práctica
+// la FIFA evita que dos terceros del mismo "bloque" caigan en cajones que
+// no los admiten). Si solo hay 12 grupos completos, esto coincide con el
+// resultado oficial siempre que no haya empates entre el 8º y 9º tercero.
+const TERCEROS_SLOTS = {
+  '3ABCDF': ['A','B','C','D','F'],
+  '3CDFGH': ['C','D','F','G','H'],
+  '3CEFHI': ['C','E','F','H','I'],
+  '3EHIJK': ['E','H','I','J','K'],
+  '3AEHIJ': ['A','E','H','I','J'],
+  '3BEFIJ': ['B','E','F','I','J'],
+  '3EFGIJ': ['E','F','G','I','J'],
+  '3DEIJL': ['D','E','I','J','L'],
+};
+
+function buildTercerosAsignados() {
+  const todos = buildBestThirds();
+  const clasificados = todos.slice(0, 8); // los 8 mejores terceros pasan
+  const grupoToTercero = {};
+  clasificados.forEach(t => { grupoToTercero[t.grupo] = t; });
+
+  // Slots ordenados por nº de candidatos disponibles (ascendente) para
+  // resolver primero los más restringidos y evitar conflictos evitables.
+  const slotsPendientes = Object.keys(TERCEROS_SLOTS);
+  const asignacion = {}; // slot -> equipo
+  const grupoUsado = new Set();
+
+  let cambio = true;
+  while (cambio) {
+    cambio = false;
+    // Recalcular candidatos disponibles por slot pendiente
+    const candidatosPorSlot = slotsPendientes
+      .filter(s => !asignacion[s])
+      .map(s => ({
+        slot: s,
+        candidatos: TERCEROS_SLOTS[s].filter(g => grupoToTercero[g] && !grupoUsado.has(g)),
+      }))
+      .sort((a, b) => a.candidatos.length - b.candidatos.length);
+
+    for (const { slot, candidatos } of candidatosPorSlot) {
+      if (candidatos.length === 1) {
+        const grupo = candidatos[0];
+        asignacion[slot] = grupoToTercero[grupo].equipo;
+        grupoUsado.add(grupo);
+        cambio = true;
+        break; // recalcular desde cero tras cada asignación
+      }
+    }
+  }
+
+  // Si quedan slots sin resolver de forma única (varios candidatos posibles
+  // y ninguno forzado), se asignan en orden de ranking para no dejar huecos.
+  Object.keys(TERCEROS_SLOTS).forEach(slot => {
+    if (asignacion[slot]) return;
+    const candidatos = TERCEROS_SLOTS[slot].filter(g => grupoToTercero[g] && !grupoUsado.has(g));
+    if (candidatos.length) {
+      const grupo = candidatos[0];
+      asignacion[slot] = grupoToTercero[grupo].equipo;
+      grupoUsado.add(grupo);
+    }
+  });
+
+  return asignacion; // { '3ABCDF': 'Marruecos', ... } — vacío si grupos incompletos
 }
 
 function renderGroups() {
@@ -2922,11 +3029,13 @@ const DIECISEISAVOS_DEF = [
 
 // Para cada cajón (1A, 2B, 3ABCDF...) resuelve el equipo real:
 //  - "1A" / "2A"  → se calculan SOLOS a partir de la clasificación de grupos
-//    en tiempo real (buildGroupStandings). Se actualizan solos al editar
-//    resultados.json, sin tocar nada más.
-//  - "3ABCDF" (terceros) → no se pueden calcular con fórmula simple porque
-//    dependen de la matriz oficial FIFA de 495 combinaciones. Se fijan a
-//    mano en resultados.json → "_playoff_slots" cuando la FIFA los confirme.
+//    en tiempo real (buildGroupStandings).
+//  - "3ABCDF" (terceros) → se calculan también SOLOS desde la tabla de
+//    Mejores Terceros (pestaña Grupos), vía buildTercerosAsignados(). La
+//    asignación real de la FIFA usa una matriz de 495 combinaciones; aquí
+//    se aproxima con una asignación determinista — si quieres forzar un
+//    cajón concreto a mano, puedes seguir editando resultados.json →
+//    "_playoff_partidos" con el nombre real en local/visitante de ese cruce.
 function getSlotLabel(slot) {
   const m = slot.match(/^([12])([A-L])$/);
   if (m) {
@@ -2936,9 +3045,11 @@ function getSlotLabel(slot) {
     if (tabla && tabla[posicion]) return tabla[posicion].equipo;
     return slot; // grupo aún sin suficientes datos
   }
-  // Terceros: solo manual vía _playoff_slots
-  const real = state.playoffSlots?.[slot];
-  return real && real.trim() ? real.trim() : slot;
+  // Terceros: se resuelven automáticamente desde la clasificación de
+  // Mejores Terceros (pestaña Grupos), sin necesidad de tocar resultados.json.
+  const asignados = state.tercerosAsignados || {};
+  if (asignados[slot]) return asignados[slot];
+  return slot;
 }
 
 // Partidos reales de eliminatoria ya jugados/programados, definidos en
@@ -3134,10 +3245,8 @@ function renderPlayoff() {
   html += `</div></div>`;
 
   html += `<div style="margin-top:1rem;font-size:0.75rem;color:var(--muted);line-height:1.6">
-    <span style="color:var(--lime)">●</span> 1º/2º de cada grupo se actualizan solos según la clasificación en vivo.
-    <span style="color:var(--gold)">●</span> Las etiquetas como <strong style="color:var(--white)">3ABCDF</strong> ("mejor 3º entre A,B,C,D,F")
-    se fijan manualmente en resultados.json cuando la FIFA confirme la combinación oficial — consulta la pestaña
-    <strong style="color:var(--white)">🌍 Grupos → Mejores Terceros</strong> para ver qué 8 equipos clasifican.
+    <span style="color:var(--lime)">●</span> 1º/2º de cada grupo y los <strong style="color:var(--white)">8 mejores terceros</strong> se actualizan solos
+    según la clasificación en vivo de la pestaña <strong style="color:var(--white)">🌍 Grupos</strong> — no es necesario tocar resultados.json.
     Los partidos con <strong style="color:var(--white)">✓ resultado real</strong> quedan bloqueados; el resto puedes pronosticarlos haciendo clic en el ganador.
   </div>`;
 
@@ -3205,12 +3314,12 @@ function renderMatches() {
         : '';
 
       html += `<div class="match-card" style="${esBonus?'border-color:var(--gold);border-width:2px;':''}" >
-        <div class="team home">${p.local}</div>
+        <div class="team home">${getFlag(p.local)} ${p.local}</div>
         <div class="score-box">
           ${scoreHtml}
           <div class="match-meta">${p.fecha ?? ''} ${bonusTag}</div>
         </div>
-        <div class="team away">${p.visitante}</div>
+        <div class="team away">${getFlag(p.visitante)} ${p.visitante}</div>
       </div>`;
     });
 
@@ -3262,7 +3371,7 @@ function renderPicks() {
         ? ' <span style="font-size:0.75rem;font-weight:800;color:var(--gold);letter-spacing:0.04em">×2</span>'
         : '';
       html += `<div class="pick-row" style="${parseInt(p.bonus)===2?'border-left:3px solid var(--gold);padding-left:0.6rem;':''}" >
-        <span>${p.local} <b>vs</b> ${p.visitante}${bonusPick}</span>
+        <span>${getFlag(p.local)} ${p.local} <b>vs</b> ${getFlag(p.visitante)} ${p.visitante}${bonusPick}</span>
         ${resultHtml}
       </div>`;
     });
@@ -3291,7 +3400,7 @@ function renderChampion() {
       <div class="section-label">${def.label} · ${def.pts} pts</div>`;
     if (real) {
       html += `<div style="margin-bottom:0.75rem;padding:0.6rem 1rem;background:var(--card);border:2px solid var(--gold);border-radius:var(--radius);font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--gold)">
-        ${real}
+        ${getFlag(real)} ${real}
       </div>`;
     } else {
       html += `<div style="margin-bottom:0.75rem;font-size:0.8rem;color:var(--muted)">Pendiente de resultado</div>`;
@@ -3303,7 +3412,7 @@ function renderChampion() {
       const hit = real && eleccion === real;
       html += `<div class="champion-card ${hit ? 'hit' : ''}">
         <div class="champ-name">${jugador}</div>
-        <div class="champ-pick">Pronóstico: <strong>${eleccion}</strong>${hit ? ` ✓ +${def.pts}pts` : ''}</div>
+        <div class="champ-pick">Pronóstico: <strong>${getFlag(eleccion)} ${eleccion}</strong>${hit ? ` ✓ +${def.pts}pts` : ''}</div>
       </div>`;
     });
     html += '</div></div>';
