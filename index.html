@@ -2577,7 +2577,7 @@ Presi,pos-K,,,,,Portugal,Colombia,RD Congo,Uzbekistán,,,,,,,,,
 Presi,pos-L,,,,,Inglaterra,Croacia,Ghana,Panamá,,,,,,,,,
 `;
 const EQUIPO_GRUPO = {"República Checa": "A", "Sudáfrica": "A", "México": "A", "Corea del Sur": "A", "Catar": "B", "Bosnia y Herzegovina": "B", "Suiza": "B", "Canadá": "B", "Haití": "C", "Marruecos": "C", "Escocia": "C", "Brasil": "C", "Estados Unidos": "D", "Paraguay": "D", "Australia": "D", "Turquía": "D", "Alemania": "E", "Curazao": "E", "Ecuador": "E", "Costa de Marfil": "E", "Suecia": "F", "Japón": "F", "Países Bajos": "F", "Túnez": "F", "Irán": "G", "Nueva Zelanda": "G", "Bélgica": "G", "Egipto": "G", "Arabia Saudita": "H", "España": "H", "Cabo Verde": "H", "Uruguay": "H", "Irak": "I", "Senegal": "I", "Francia": "I", "Noruega": "I", "Argelia": "J", "Argentina": "J", "Jordania": "J", "Austria": "J", "RD Congo": "K", "Uzbekistán": "K", "Portugal": "K", "Colombia": "K", "Inglaterra": "L", "Croacia": "L", "Ghana": "L", "Panamá": "L"};
-const EQUIPO_BANDERA = {"República Checa": "🇨🇿", "Sudáfrica": "🇿🇦", "México": "🇲🇽", "Corea del Sur": "🇰🇷", "Catar": "🇶🇦", "Bosnia y Herzegovina": "🇧🇦", "Suiza": "🇨🇭", "Canadá": "🇨🇦", "Haití": "🇭🇹", "Marruecos": "🇲🇦", "Escocia": "🏴", "Brasil": "🇧🇷", "Estados Unidos": "🇺🇸", "Paraguay": "🇵🇾", "Australia": "🇦🇺", "Turquía": "🇹🇷", "Alemania": "🇩🇪", "Curazao": "🇨🇼", "Ecuador": "🇪🇨", "Costa de Marfil": "🇨🇮", "Suecia": "🇸🇪", "Japón": "🇯🇵", "Países Bajos": "🇳🇱", "Túnez": "🇹🇳", "Irán": "🇮🇷", "Nueva Zelanda": "🇳🇿", "Bélgica": "🇧🇪", "Egipto": "🇪🇬", "Arabia Saudita": "🇸🇦", "España": "🇪🇸", "Cabo Verde": "🇨🇻", "Uruguay": "🇺🇾", "Irak": "🇮🇶", "Senegal": "🇸🇳", "Francia": "🇫🇷", "Noruega": "🇳🇴", "Argelia": "🇩🇿", "Argentina": "🇦🇷", "Jordania": "🇯🇴", "Austria": "🇦🇹", "RD Congo": "🇨🇩", "Uzbekistán": "🇺🇿", "Portugal": "🇵🇹", "Colombia": "🇨🇴", "Inglaterra": "🏴", "Croacia": "🇭🇷", "Ghana": "🇬🇭", "Panamá": "🇵🇦"};
+const EQUIPO_BANDERA = {"República Checa": "🇨🇿", "Sudáfrica": "🇿🇦", "México": "🇲🇽", "Corea del Sur": "🇰🇷", "Catar": "🇶🇦", "Bosnia y Herzegovina": "🇧🇦", "Suiza": "🇨🇭", "Canadá": "🇨🇦", "Haití": "🇭🇹", "Marruecos": "🇲🇦", "Escocia": "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "Brasil": "🇧🇷", "Estados Unidos": "🇺🇸", "Paraguay": "🇵🇾", "Australia": "🇦🇺", "Turquía": "🇹🇷", "Alemania": "🇩🇪", "Curazao": "🇨🇼", "Ecuador": "🇪🇨", "Costa de Marfil": "🇨🇮", "Suecia": "🇸🇪", "Japón": "🇯🇵", "Países Bajos": "🇳🇱", "Túnez": "🇹🇳", "Irán": "🇮🇷", "Nueva Zelanda": "🇳🇿", "Bélgica": "🇧🇪", "Egipto": "🇪🇬", "Arabia Saudita": "🇸🇦", "España": "🇪🇸", "Cabo Verde": "🇨🇻", "Uruguay": "🇺🇾", "Irak": "🇮🇶", "Senegal": "🇸🇳", "Francia": "🇫🇷", "Noruega": "🇳🇴", "Argelia": "🇩🇿", "Argentina": "🇦🇷", "Jordania": "🇯🇴", "Austria": "🇦🇹", "RD Congo": "🇨🇩", "Uzbekistán": "🇺🇿", "Portugal": "🇵🇹", "Colombia": "🇨🇴", "Inglaterra": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Croacia": "🇭🇷", "Ghana": "🇬🇭", "Panamá": "🇵🇦"};
 function getFlag(equipo) { return EQUIPO_BANDERA[equipo] || ''; }
 
 
@@ -2839,23 +2839,52 @@ function calcPlayoffPointsForPlayer(jugador) {
   };
 
   // ── Bonus de FASE DE GRUPOS → DIECISEISAVOS (van dentro de "dieciseisavos.equipo") ──
-  // Un único concepto: el jugador predijo que un equipo terminaría 1º o 2º
-  // EXACTO de su grupo (por tanto clasificado) y ese equipo realmente quedó
-  // en esa misma posición (1º o 2º). Son los mismos 4 puntos tanto si el
-  // acierto es en la posición 1ª como en la 2ª — no hay bonus adicional por
-  // "posición exacta": acertar el 3º o 4º no suma nada porque esos equipos
-  // no clasifican.
+  // Solo se otorgan cuando la clasificación de ese grupo ya es DEFINITIVA
+  // (3 jornadas jugadas por los 4 equipos — el mismo criterio que marca el
+  // candado 🔒 en el cuadro de Play Off). Con resultados parciales, aunque
+  // el orden actual coincida con el pronóstico, todavía podría cambiar, así
+  // que no se puntúa hasta que el grupo esté confirmado.
+  //
+  // Dos conceptos posibles, sin duplicarse entre sí para el mismo equipo:
+  //  1) 1º o 2º exacto del grupo → ptsClasifGrupos cuando el grupo está
+  //     confirmado.
+  //  2) 3º clasificado como "mejor tercero" → mismo valor ptsClasifGrupos,
+  //     pero solo cuando los 8 mejores terceros ya son definitivos, es
+  //     decir, cuando los 12 grupos están completos (el ranking de
+  //     terceros depende de todos ellos a la vez).
   const ptsClasifGrupos = CONFIG.PTS['Fase de grupos']?.clasificado || 0;
   let ptsBonusGrupos = 0, aciertosClasifGrupos = 0;
-  Object.keys(state.groupStandings || {}).forEach(letra => {
+
+  const letrasGrupos = Object.keys(state.groupStandings || {});
+  const todosGruposCompletos = letrasGrupos.length > 0 && letrasGrupos.every(l => state.groupStandings[l]?.completo);
+  const mejoresTercerosConfirmados = todosGruposCompletos ? buildBestThirds().slice(0, 8).map(t => normEquipo(t.equipo)) : [];
+
+  letrasGrupos.forEach(letra => {
     const posPick = picks.find(p => p.partido_id === `pos-${letra}`);
     if (!posPick) return;
     const tabla = state.groupStandings[letra] || [];
-    for (let pos = 1; pos <= 2; pos++) {
-      const equipoPron = posPick[`pos${pos}`];
-      const equipoRealEnEstaPos = tabla[pos-1]?.equipo;
-      if (!equipoPron || !equipoRealEnEstaPos) continue;
-      if (normEquipo(equipoPron) === normEquipo(equipoRealEnEstaPos)) {
+    const grupoConfirmado = !!tabla.completo;
+
+    // 1º y 2º exacto (solo si el grupo ya está confirmado)
+    if (grupoConfirmado) {
+      for (let pos = 1; pos <= 2; pos++) {
+        const equipoPron = posPick[`pos${pos}`];
+        const equipoRealEnEstaPos = tabla[pos-1]?.equipo;
+        if (!equipoPron || !equipoRealEnEstaPos) continue;
+        if (normEquipo(equipoPron) === normEquipo(equipoRealEnEstaPos)) {
+          ptsBonusGrupos += ptsClasifGrupos;
+          aciertosClasifGrupos++;
+        }
+      }
+    }
+
+    // 3º clasificado como mejor tercero (solo cuando los 12 grupos están
+    // completos, porque hasta entonces el ranking de terceros no es firme)
+    if (mejoresTercerosConfirmados.length) {
+      const equipoPron3 = posPick.pos3;
+      const equipoReal3 = tabla[2]?.equipo; // el que realmente quedó 3º de ESTE grupo
+      if (equipoPron3 && equipoReal3 && normEquipo(equipoPron3) === normEquipo(equipoReal3)
+          && mejoresTercerosConfirmados.includes(normEquipo(equipoReal3))) {
         ptsBonusGrupos += ptsClasifGrupos;
         aciertosClasifGrupos++;
       }
@@ -3120,24 +3149,46 @@ function showDetalle(jugador, concepto) {
     titulo = `${nombres[concepto]} · ${jugador}`;
 
     // Bonus de fase de grupos → dieciseisavos (solo aparece en esta ronda).
-    // Único concepto: acertar el equipo que clasifica en la posición 1ª o 2ª
-    // exacta de su grupo. No hay puntos extra por "posición exacta": acertar
-    // el 3º o 4º no suma nada porque esos equipos no clasifican.
+    // Solo se otorga cuando el grupo está CONFIRMADO (3 jornadas jugadas,
+    // el mismo criterio del candado 🔒 en Play Off). El 3º puesto suma lo
+    // mismo, pero solo si además es uno de los 8 mejores terceros, y eso
+    // solo es firme cuando los 12 grupos están completos.
     if (concepto === 'dieciseisavos') {
       const ptsClasifGrupos = CONFIG.PTS['Fase de grupos']?.clasificado || 0;
-      Object.keys(state.groupStandings || {}).sort().forEach(letra => {
+      const letrasGrupos = Object.keys(state.groupStandings || {});
+      const todosGruposCompletos = letrasGrupos.length > 0 && letrasGrupos.every(l => state.groupStandings[l]?.completo);
+      const mejoresTercerosConfirmados = todosGruposCompletos ? buildBestThirds().slice(0, 8).map(t => normEquipo(t.equipo)) : [];
+
+      letrasGrupos.sort().forEach(letra => {
         const posPick = picks.find(p => p.partido_id === `pos-${letra}`);
         if (!posPick) return;
         const tabla = state.groupStandings[letra] || [];
-        for (let pos = 1; pos <= 2; pos++) {
-          const equipoPron = posPick[`pos${pos}`];
-          if (!equipoPron) continue;
-          const equipoRealEnEstaPos = tabla[pos-1]?.equipo;
-          if (equipoRealEnEstaPos && normEquipo(equipoPron) === normEquipo(equipoRealEnEstaPos)) {
+        const grupoConfirmado = !!tabla.completo;
+
+        if (grupoConfirmado) {
+          for (let pos = 1; pos <= 2; pos++) {
+            const equipoPron = posPick[`pos${pos}`];
+            if (!equipoPron) continue;
+            const equipoRealEnEstaPos = tabla[pos-1]?.equipo;
+            if (equipoRealEnEstaPos && normEquipo(equipoPron) === normEquipo(equipoRealEnEstaPos)) {
+              filas.push({
+                label: `Grupo ${letra} 🔒, ${pos}º pronosticado: ${getFlag(equipoPron)} ${equipoPron}`,
+                pts: ptsClasifGrupos,
+                sub: `equipo clasificado en ${pos}º posición exacta`
+              });
+            }
+          }
+        }
+
+        if (mejoresTercerosConfirmados.length) {
+          const equipoPron3 = posPick.pos3;
+          const equipoReal3 = tabla[2]?.equipo;
+          if (equipoPron3 && equipoReal3 && normEquipo(equipoPron3) === normEquipo(equipoReal3)
+              && mejoresTercerosConfirmados.includes(normEquipo(equipoReal3))) {
             filas.push({
-              label: `Grupo ${letra}, ${pos}º pronosticado: ${getFlag(equipoPron)} ${equipoPron}`,
+              label: `Grupo ${letra} 🔒, 3º pronosticado: ${getFlag(equipoPron3)} ${equipoPron3}`,
               pts: ptsClasifGrupos,
-              sub: `equipo clasificado en ${pos}º posición exacta`
+              sub: 'mejor tercero clasificado'
             });
           }
         }
@@ -3974,26 +4025,36 @@ function renderPicksClasificacion(jugador) {
   const letrasGrupos = Object.keys(state.groupStandings || {}).sort();
   if (letrasGrupos.length) {
     const ptsClasifGrupos = CONFIG.PTS['Fase de grupos']?.clasificado || 0;
+    const todosGruposCompletos = letrasGrupos.every(l => state.groupStandings[l]?.completo);
+    const mejoresTercerosConfirmados = todosGruposCompletos ? buildBestThirds().slice(0, 8).map(t => normEquipo(t.equipo)) : [];
+
     html += `<div class="section-label">¿Quién pronosticó que clasificaría en cada grupo?</div>`;
     html += `<div style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;line-height:1.5">
       Antes de empezar el torneo, ${jugador} predijo el orden de cada grupo. La columna <strong style="color:var(--white)">"Clasif. real (hoy)"</strong>
       es la tabla actual del Mundial, que se va actualizando con cada resultado — por eso puede cambiar de un día a otro.
-      <span style="color:var(--lime)">✓ verde</span> = ${jugador} acertó qué equipo queda exactamente 1º o 2º de su grupo (clasificado) → suma +${ptsClasifGrupos} pts.
-      Acertar el 3º o 4º puesto no suma puntos, porque esos equipos no se clasifican.
+      <span style="color:var(--lime)">✓ verde</span> = ${jugador} acertó qué equipo clasifica en esa posición → suma +${ptsClasifGrupos} pts.
+      Solo cuenta cuando ese grupo ya está <strong style="color:var(--white)">confirmado 🔒</strong> (3 jornadas jugadas): mientras el grupo no esté completo, un acierto parcial todavía podría cambiar y no puntúa.
+      El 3º puesto solo suma si además es uno de los <strong style="color:var(--white)">8 mejores terceros</strong> que clasifican (y eso solo se sabe con certeza cuando los 12 grupos están completos).
     </div>`;
     html += `<div class="groups-grid" style="margin-bottom:1.5rem">`;
     letrasGrupos.forEach(letra => {
       const posPick = picks.find(p => p.partido_id === `pos-${letra}`);
       const real = state.groupStandings[letra] || [];
+      const grupoConfirmado = !!real.completo;
       html += `<div class="group-card">
-        <div class="group-card-header">Grupo ${letra}</div>
+        <div class="group-card-header">Grupo ${letra} ${grupoConfirmado ? '<span style="color:var(--gold);font-size:0.8rem">🔒</span>' : ''}</div>
         <table class="group-table" style="font-size:0.74rem">
           <thead><tr><th>#</th><th>Pronóstico de ${jugador}</th><th>Clasif. real (hoy)</th></tr></thead>
           <tbody>`;
       for (let pos = 1; pos <= 4; pos++) {
         const equipoPron = posPick ? posPick[`pos${pos}`] : '';
         const equipoReal = real[pos-1]?.equipo || '';
-        const esAciertoPuntuable = pos <= 2 && equipoPron && equipoReal && normEquipo(equipoPron) === normEquipo(equipoReal);
+        const coincide = equipoPron && equipoReal && normEquipo(equipoPron) === normEquipo(equipoReal);
+
+        let esAciertoPuntuable = false;
+        if (pos <= 2 && coincide && grupoConfirmado) esAciertoPuntuable = true;
+        if (pos === 3 && coincide && mejoresTercerosConfirmados.includes(normEquipo(equipoReal))) esAciertoPuntuable = true;
+
         const marca = esAciertoPuntuable ? ` ✓+${ptsClasifGrupos}` : '';
         const color = esAciertoPuntuable ? 'color:var(--lime);font-weight:700' : '';
         html += `<tr class="${pos<=2?'qualify':''} ${pos===2?'qualify-divider':''}">
