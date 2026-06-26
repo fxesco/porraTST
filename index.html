@@ -319,6 +319,13 @@
     /* ── MATCHES ── */
     .match-group { margin-bottom: 2rem; }
 
+    /* Grilla de grupos: en pantallas anchas se ven 2-3 grupos en paralelo */
+    .matches-groups-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
     .match-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -329,6 +336,44 @@
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
       gap: 0.5rem;
+    }
+
+    /* Versión compacta: usada en la vista de Fase de grupos para ver más
+       resultados de un vistazo, sin perder legibilidad. */
+    .match-card-compact {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem 0.65rem;
+      margin-bottom: 0.35rem;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+    }
+
+    .match-card-compact .team {
+      font-weight: 600;
+      font-size: 0.78rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .match-card-compact .team.home { text-align: right; }
+    .match-card-compact .team.away { text-align: left; }
+    .match-card-compact .score-box { text-align: center; min-width: 2.6rem; }
+    .match-card-compact .score {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.15rem;
+      color: var(--lime);
+      line-height: 1;
+    }
+    .match-card-compact .score.pending { color: var(--muted); font-size: 0.85rem; }
+    .match-card-compact .match-meta {
+      font-size: 0.58rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .team {
@@ -665,6 +710,13 @@
 
     .po-slot.readonly { cursor: default; }
     .po-slot.readonly:hover { background: none; }
+
+    /* Equipo ya DEFINITIVO en esa posición (su grupo completó las 3
+       jornadas), aunque el cruce de eliminatoria todavía no se haya jugado.
+       Se marca solo con el icono 🔒 junto al nombre (ver slotHtml en JS). */
+    .po-slot.confirmado {
+      background: rgba(245, 200, 66, 0.06);
+    }
 
     .po-slot.winner {
       background: rgba(200,241,53,0.08);
@@ -3317,7 +3369,10 @@ function buildGroupStandings() {
       else { local.pe++; visit.pe++; }
     });
 
-  // Convertir a array ordenado por grupo, calculando pts y dg
+  // Convertir a array ordenado por grupo, calculando pts y dg.
+  // También marcamos si el grupo ya está completo (los 4 equipos han jugado
+  // sus 3 partidos de la fase de grupos): en ese caso la clasificación de
+  // ese grupo ya es DEFINITIVA y no puede cambiar más.
   const resultado = {};
   Object.keys(grupos).sort().forEach(letra => {
     const equipos = Object.values(grupos[letra]).map(e => ({
@@ -3326,6 +3381,7 @@ function buildGroupStandings() {
       dg: e.gf - e.gc,
     }));
     equipos.sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf);
+    equipos.completo = equipos.length === 4 && equipos.every(e => e.pj >= 3);
     resultado[letra] = equipos;
   });
 
@@ -3518,6 +3574,24 @@ const DIECISEISAVOS_DEF = [
   { id:'R16-16', a:'1K', b:'3DEIJL' },
 ];
 
+// Indica si el equipo asignado a un cajón (1A, 2B, 3ABCDF...) ya es
+// DEFINITIVO y no puede cambiar más:
+//  - "1A"/"2A": definitivo cuando el grupo A ha completado sus 3 jornadas
+//    para los 4 equipos (buildGroupStandings ya lo marca con .completo).
+//  - "3XXXXX" (terceros): definitivo solo cuando TODOS los grupos de los
+//    que ese cajón puede tomar un tercero están completos, porque hasta
+//    entonces el ranking de mejores terceros todavía puede cambiar.
+function isSlotConfirmado(slot) {
+  const m = slot.match(/^([12])([A-L])$/);
+  if (m) {
+    const tabla = state.groupStandings?.[m[2]];
+    return !!(tabla && tabla.completo);
+  }
+  const gruposCandidatos = TERCEROS_SLOTS[slot];
+  if (!gruposCandidatos) return false;
+  return gruposCandidatos.every(g => state.groupStandings?.[g]?.completo);
+}
+
 // Para cada cajón (1A, 2B, 3ABCDF...) resuelve el equipo real:
 //  - "1A" / "2A"  → se calculan SOLOS a partir de la clasificación de grupos
 //    en tiempo real (buildGroupStandings).
@@ -3613,6 +3687,11 @@ function buildPlayoffRounds() {
       id: m.id, slotA: m.a, slotB: m.b,
       teamA, teamB,
       fijado,
+      // Confirmado = la posición de ese equipo en su grupo ya es definitiva
+      // (su grupo ha completado sus 3 jornadas) y por tanto no cambiará más,
+      // aunque el cruce de dieciseisavos en sí todavía no se haya jugado.
+      confirmadoA: !!(fijado && fijado.local) || isSlotConfirmado(m.a),
+      confirmadoB: !!(fijado && fijado.visitante) || isSlotConfirmado(m.b),
     };
   }));
 
@@ -3676,7 +3755,7 @@ function renderPlayoff() {
     const golesA = tieneResultado ? fijado.gL : null;
     const golesB = tieneResultado ? fijado.gV : null;
 
-    const slotHtml = (team, side, goles) => {
+    const slotHtml = (team, side, goles, confirmado) => {
       if (!team) {
         return `<div class="po-slot placeholder">⏳ Pendiente</div>`;
       }
@@ -3684,18 +3763,23 @@ function renderPlayoff() {
       const isLoser = winner && winner !== side;
       const clickAttr = locked ? '' : `onclick="pickWinner('${m.id}','${side}')"`;
       const cursorCls = locked ? 'readonly' : '';
-      const cls = `po-slot ${isWinner?'winner':''} ${isLoser?'loser':''} ${cursorCls}`;
+      // "Confirmado" = el equipo ya es definitivo en esa posición (su grupo
+      // ha completado las 3 jornadas), aunque el cruce todavía no se haya
+      // jugado. Se marca con un icono de candado dorado junto al nombre.
+      const confirmadoCls = (confirmado && !locked) ? 'confirmado' : '';
+      const cls = `po-slot ${isWinner?'winner':''} ${isLoser?'loser':''} ${cursorCls} ${confirmadoCls}`;
       const lockIcon = (locked && isWinner) ? ' ✓' : '';
+      const confirmIcon = (confirmado && !locked) ? ' <span style="color:var(--gold)">🔒</span>' : '';
       const scoreHtml = goles !== null ? `<span class="po-score">${goles}</span>` : '';
       return `<div class="${cls}" ${clickAttr}>
-        <span>${getFlag(team)} ${team}${lockIcon}</span>
+        <span>${getFlag(team)} ${team}${lockIcon}${confirmIcon}</span>
         ${scoreHtml}
       </div>`;
     };
 
     return `<div class="${matchCls}">
-      ${slotHtml(teamA, 'A', golesA)}
-      ${slotHtml(teamB, 'B', golesB)}
+      ${slotHtml(teamA, 'A', golesA, m.confirmadoA)}
+      ${slotHtml(teamB, 'B', golesB, m.confirmadoB)}
     </div>`;
   };
 
@@ -3739,6 +3823,8 @@ function renderPlayoff() {
     <span style="color:var(--lime)">●</span> 1º/2º de cada grupo y los <strong style="color:var(--white)">8 mejores terceros</strong> se actualizan solos
     según la clasificación en vivo de la pestaña <strong style="color:var(--white)">🌍 Grupos</strong> — no es necesario tocar resultados.json.
     Los partidos con <strong style="color:var(--white)">✓ resultado real</strong> quedan bloqueados; el resto puedes pronosticarlos haciendo clic en el ganador.
+    <span style="color:var(--gold)">●</span> Un equipo con <strong style="color:var(--white)">🔒</strong> ya ha completado sus 3 partidos de grupo en esa posición:
+    su sitio en el cuadro es definitivo, aunque el cruce de eliminatoria todavía no se haya disputado.
   </div>`;
 
   document.getElementById('playoff-content').innerHTML = html;
@@ -3788,6 +3874,8 @@ function clearDownstreamPicks(matchId) {
 function renderMatches() {
   // Agrupamos los partidos de fase de grupos por su letra de grupo (A, B, C...)
   // usando el mismo mapeo EQUIPO_GRUPO que alimenta la pestaña Clasificación.
+  // Se muestran en una grilla (2-3 grupos en paralelo en pantallas anchas) con
+  // tarjetas compactas, para ver muchos más resultados de un vistazo.
   const partidosGrupos = state.partidos.filter(p => p.fase === 'Fase de grupos');
   const otrosPartidos = state.partidos.filter(p => p.fase !== 'Fase de grupos');
 
@@ -3799,36 +3887,49 @@ function renderMatches() {
 
   let html = '';
 
-  const renderPartido = (p) => {
+  const renderPartidoCompacto = (p) => {
     const jugado = p.gL !== '' && p.gV !== '';
     const scoreHtml = jugado
-      ? `<div class="score">${p.gL} – ${p.gV}</div>`
+      ? `<div class="score">${p.gL}–${p.gV}</div>`
       : `<div class="score pending">vs</div>`;
     const esBonus = parseInt(p.bonus) === 2;
     const bonusTag = esBonus
-      ? '<span style="display:inline-block;margin-left:0.4rem;font-size:0.85rem;font-weight:900;background:#3a2200;color:var(--gold);border:1px solid var(--gold);border-radius:4px;padding:0.15rem 0.5rem;letter-spacing:0.06em;vertical-align:middle">×2🔥</span>'
+      ? '<span style="display:inline-block;margin-left:0.3rem;font-size:0.6rem;font-weight:900;background:#3a2200;color:var(--gold);border:1px solid var(--gold);border-radius:3px;padding:0.05rem 0.3rem;vertical-align:middle">×2</span>'
       : '';
-    return `<div class="match-card" style="${esBonus?'border-color:var(--gold);border-width:2px;':''}" >
+    return `<div class="match-card-compact" style="${esBonus?'border-color:var(--gold);':''}" >
       <div class="team home">${getFlag(p.local)} ${p.local}</div>
       <div class="score-box">
         ${scoreHtml}
-        <div class="match-meta">${p.fecha ?? ''} ${bonusTag}</div>
+        <div class="match-meta">${p.fecha ?? ''}${bonusTag}</div>
       </div>
       <div class="team away">${getFlag(p.visitante)} ${p.visitante}</div>
     </div>`;
   };
 
-  Object.keys(porGrupo).sort().forEach(letra => {
-    html += `<div class="match-group">
-      <div class="section-label">Grupo ${letra}</div>`;
-    porGrupo[letra].forEach(p => { html += renderPartido(p); });
-    html += '</div>';
-  });
+  if (Object.keys(porGrupo).length) {
+    html += `<div class="matches-groups-grid">`;
+    Object.keys(porGrupo).sort().forEach(letra => {
+      html += `<div class="match-group" style="margin-bottom:0">
+        <div class="section-label">Grupo ${letra}</div>`;
+      porGrupo[letra].forEach(p => { html += renderPartidoCompacto(p); });
+      html += '</div>';
+    });
+    html += `</div>`;
+  }
 
   // Por si en el futuro hay partidos de eliminatoria sueltos en state.partidos
   // (normalmente no ocurre, esos van por la pestaña Play Off), los mostramos
-  // agrupados por fase al final para no perder información.
+  // agrupados por fase al final para no perder información, con tarjeta normal.
   if (otrosPartidos.length) {
+    const renderPartido = (p) => {
+      const jugado = p.gL !== '' && p.gV !== '';
+      const scoreHtml = jugado ? `<div class="score">${p.gL} – ${p.gV}</div>` : `<div class="score pending">vs</div>`;
+      return `<div class="match-card">
+        <div class="team home">${getFlag(p.local)} ${p.local}</div>
+        <div class="score-box">${scoreHtml}<div class="match-meta">${p.fecha ?? ''}</div></div>
+        <div class="team away">${getFlag(p.visitante)} ${p.visitante}</div>
+      </div>`;
+    };
     const fasesOtras = [...new Set(otrosPartidos.map(p => p.fase))];
     fasesOtras.forEach(fase => {
       html += `<div class="match-group"><div class="section-label">${fase}</div>`;
