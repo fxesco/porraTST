@@ -240,60 +240,60 @@
     "gV": "3"
   },
   "61": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "62": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "63": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "64": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "65": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "66": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "67": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "68": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "69": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "70": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "71": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "72": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "73": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "74": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "_predicciones": {
     "campeon": "",
@@ -324,16 +324,16 @@
       "match": "R16-1",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "28 Jun",
       "bonus": 1
     },
     {
       "ronda": "dieciseisavos",
       "match": "R16-2",
-      "local": "",
-      "visitante": "",
+      "local": "1",
+      "visitante": "0",
       "gL": "",
       "gV": "",
       "fecha": "29 Jun",
@@ -342,8 +342,8 @@
     {
       "ronda": "dieciseisavos",
       "match": "R16-3",
-      "local": "",
-      "visitante": "",
+      "local": "1",
+      "visitante": "0",
       "gL": "",
       "gV": "",
       "fecha": "29 Jun",
@@ -352,8 +352,8 @@
     {
       "ronda": "dieciseisavos",
       "match": "R16-4",
-      "local": "",
-      "visitante": "",
+      "local": "1",
+      "visitante": "0",
       "gL": "",
       "gV": "",
       "fecha": "30 Jun",
@@ -362,8 +362,8 @@
     {
       "ronda": "dieciseisavos",
       "match": "R16-5",
-      "local": "",
-      "visitante": "",
+     "local": "1",
+      "visitante": "0",
       "gL": "",
       "gV": "",
       "fecha": "30 Jun",
@@ -372,8 +372,8 @@
     {
       "ronda": "dieciseisavos",
       "match": "R16-6",
-      "local": "",
-      "visitante": "",
+      "local": "1",
+      "visitante": "0",
       "gL": "",
       "gV": "",
       "fecha": "30 Jun",
@@ -384,8 +384,8 @@
       "match": "R16-7",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "local": "1",
+      "visitante": "0",
       "fecha": "1 Jul",
       "bonus": 1
     },
