@@ -3916,6 +3916,13 @@ function resetPlayoff() {
   playoffWinners = {};
   savePlayoffWinners(playoffWinners);
   renderPlayoff();
+  renderRanking();
+  const jugadorSeleccionado = document.getElementById('player-selector')?.value;
+  if (jugadorSeleccionado) renderPicksRondas(jugadorSeleccionado);
+  const subpanelEliminatoria = document.getElementById('subpanel-upcoming-eliminatoria');
+  if (subpanelEliminatoria && subpanelEliminatoria.classList.contains('active')) {
+    renderUpcomingEliminatoria();
+  }
 }
 
 // Determina el ganador ('A'|'B'|null) de un partido, ya sea porque está
@@ -4213,6 +4220,24 @@ function pickWinner(matchId, side) {
   playoffWinners[matchId] = side;
   savePlayoffWinners(playoffWinners);
   renderPlayoff();
+
+  // La simulación manual del cuadro también debe reflejarse en la
+  // Clasificación general (columnas 16avos/octavos/cuartos/semis...), ya
+  // que esos puntos dependen de qué equipo avanza en cada ronda — no solo
+  // de los resultados reales fijados en resultados.json.
+  renderRanking();
+
+  // Si hay un participante seleccionado en Pronósticos, su vista de
+  // "Rondas clasificatorias" también depende de la simulación del cuadro.
+  const jugadorSeleccionado = document.getElementById('player-selector')?.value;
+  if (jugadorSeleccionado) renderPicksRondas(jugadorSeleccionado);
+
+  // La vista "Próximos → Eliminatoria" (todos los participantes a la vez)
+  // también usa el cuadro resuelto en vivo.
+  const subpanelEliminatoria = document.getElementById('subpanel-upcoming-eliminatoria');
+  if (subpanelEliminatoria && subpanelEliminatoria.classList.contains('active')) {
+    renderUpcomingEliminatoria();
+  }
 }
 
 function clearDownstreamPicks(matchId) {
