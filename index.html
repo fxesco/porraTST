@@ -627,43 +627,151 @@
     .thirds-table th:nth-child(8), .thirds-table td:nth-child(8) { width: 12%; }
 
     /* ── PLAY OFF ── */
-    .playoff-wrapper {
-      overflow-x: auto;
-      padding-bottom: 1rem;
+    .bracket-titles {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1fr 1fr;
+      gap: 0.4rem;
+      margin-bottom: 0.5rem;
+      min-width: 960px;
     }
-
-    .playoff-board {
-      display: flex;
-      gap: 1.75rem;
-      min-width: max-content;
-      padding: 0.5rem 0.25rem;
-    }
-
-    .playoff-round {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      gap: 1rem;
-      min-width: 190px;
-    }
-
-    .playoff-round-title {
+    .bracket-titles span {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted);
       text-align: center;
-      margin-bottom: 0.4rem;
+    }
+    .bracket-titles-center { color: var(--lime) !important; }
+
+    .bracket-wrapper { overflow-x: auto; padding-bottom: 1rem; }
+
+    .bracket-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1fr 1fr;
+      gap: 1.4rem;
+      min-width: 1100px;
+      align-items: stretch;
     }
 
-    .playoff-matches {
+    /* Cada columna es un contenedor flex que reparte sus partidos a partes
+       iguales en la altura total del bracket (920px), de forma que el
+       partido N de cada ronda quede exactamente centrado frente a los 2
+       partidos de la ronda anterior que lo alimentan — necesario para que
+       las líneas conectoras lleguen al punto correcto. */
+    .bracket-col {
       display: flex;
       flex-direction: column;
-      justify-content: space-around;
+      min-height: 920px;
+      grid-row: 1;
+    }
+    .bracket-col > .bracket-match-wrap {
       flex: 1;
-      gap: 1.1rem;
+      display: flex;
+      align-items: center;
+    }
+    .bracket-col > .bracket-match-wrap > .po-match { width: 100%; }
+
+    .bracket-match-wrap { position: relative; }
+
+    /* ── Líneas conectoras estilo "llave" ── conectan cada partido con el
+       siguiente de su rama. Como los wraps de una columna no tienen gap
+       entre sí (ocupan flex:1 a partes iguales), el punto de unión entre
+       un wrap "de arriba" y el "de abajo" que alimentan al mismo siguiente
+       partido cae exactamente en el borde que comparten. Por eso el trazo
+       vertical mide el 50% de la altura del propio wrap en ambos casos. */
+    .bracket-left.bracket-conn-top::after,
+    .bracket-right.bracket-conn-top::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 0.7rem;
+      height: 50%;
+      border-top: 1px solid var(--border);
+    }
+    .bracket-left.bracket-conn-bottom::after,
+    .bracket-right.bracket-conn-bottom::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      width: 0.7rem;
+      height: 50%;
+      border-bottom: 1px solid var(--border);
+    }
+    .bracket-left.bracket-conn-top::after,
+    .bracket-left.bracket-conn-bottom::after {
+      right: -0.7rem;
+      border-right: 1px solid var(--border);
+    }
+    .bracket-right.bracket-conn-top::before,
+    .bracket-right.bracket-conn-bottom::before {
+      left: -0.7rem;
+      border-left: 1px solid var(--border);
+    }
+    /* Trazo de entrada al partido siguiente: un pequeño segmento horizontal
+       que sale de cada partido hacia la columna anterior (de donde vienen
+       sus dos alimentadores), centrado verticalmente en el propio partido. */
+    .bracket-left.bracket-conn-in::before {
+      content: '';
+      position: absolute;
+      left: -0.7rem;
+      top: 50%;
+      width: 0.7rem;
+      height: 1px;
+      background: var(--border);
+    }
+    .bracket-right.bracket-conn-in::after {
+      content: '';
+      position: absolute;
+      right: -0.7rem;
+      top: 50%;
+      width: 0.7rem;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Conector simple desde cada semifinal hacia la Final central: un
+       trazo horizontal que sale por el lado interior del wrap, hacia el
+       hueco que separa la columna de semifinal del bloque central. */
+    .bracket-left.bracket-conn-final::after {
+      content: '';
+      position: absolute;
+      right: -0.7rem;
+      top: 50%;
+      width: 0.7rem;
+      height: 1px;
+      background: var(--border);
+    }
+    .bracket-right.bracket-conn-final::before {
+      content: '';
+      position: absolute;
+      left: -0.7rem;
+      top: 50%;
+      width: 0.7rem;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .bracket-center {
+      grid-column: 5;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0 0.5rem;
+      min-height: 920px;
+    }
+
+    .bracket-bronze-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-top: 0.75rem;
     }
 
     .po-match {
@@ -2023,13 +2131,13 @@ Ojeda,octavos-2,0,1,México,Países Bajos,,,,,,,,,,,,,
 Ojeda,octavos-1,0,1,Alemania,Francia,,,,,,,,,,,,,
 Ojeda,octavos-3,1,0,Brasil,Costa de Marfil,,,,,,,,,,,,,
 Ojeda,octavos-4,0,1,República Checa,Inglaterra,,,,,,,,,,,,,
-Ojeda,octavos-6,1,0,Portugal,Uruguay,,,,,,,,,,,,,
-Ojeda,octavos-5,0,1,Turquía,Bélgica,,,,,,,,,,,,,
+Ojeda,octavos-5,1,0,Portugal,Uruguay,,,,,,,,,,,,,
+Ojeda,octavos-6,0,1,Turquía,Bélgica,,,,,,,,,,,,,
 Ojeda,octavos-7,1,0,España,Estados Unidos,,,,,,,,,,,,,
 Ojeda,octavos-8,0,1,Suiza,Colombia,,,,,,,,,,,,,
 Ojeda,cuartos-1,1,0,Francia,Países Bajos,,,,,,,,,,,,,
-Ojeda,cuartos-2,1,0,Portugal,Bélgica,,,,,,,,,,,,,
-Ojeda,cuartos-3,1,0,Brasil,Inglaterra,,,,,,,,,,,,,
+Ojeda,cuartos-3,1,0,Portugal,Bélgica,,,,,,,,,,,,,
+Ojeda,cuartos-2,1,0,Brasil,Inglaterra,,,,,,,,,,,,,
 Ojeda,cuartos-4,1,0,España,Colombia,,,,,,,,,,,,,
 Ojeda,semis-1,1,0,Francia,Portugal,,,,,,,,,,,,,
 Ojeda,semis-2,0,1,Brasil,España,,,,,,,,,,,,,
@@ -2055,13 +2163,13 @@ Juanillo,octavos-2,0,1,México,Brasil,,,,,,,,,,,,,
 Juanillo,octavos-1,1,3,Alemania,Francia,,,,,,,,,,,,,
 Juanillo,octavos-3,1,2,Marruecos,Ecuador,,,,,,,,,,,,,
 Juanillo,octavos-4,1,2,Corea del Sur,Noruega,,,,,,,,,,,,,
-Juanillo,octavos-6,2,3,Colombia,España,,,,,,,,,,,,,
-Juanillo,octavos-5,2,1,Turquía,Egipto,,,,,,,,,,,,,
+Juanillo,octavos-5,2,3,Colombia,España,,,,,,,,,,,,,
+Juanillo,octavos-6,2,1,Turquía,Egipto,,,,,,,,,,,,,
 Juanillo,octavos-7,1,0,Argentina,Bélgica,,,,,,,,,,,,,
 Juanillo,octavos-8,1,3,Canadá,Portugal,,,,,,,,,,,,,
 Juanillo,cuartos-1,2,1,Francia,Brasil,,,,,,,,,,,,,
-Juanillo,cuartos-2,2,0,España,Turquía,,,,,,,,,,,,,
-Juanillo,cuartos-3,1,0,Ecuador,Noruega,,,,,,,,,,,,,
+Juanillo,cuartos-3,2,0,España,Turquía,,,,,,,,,,,,,
+Juanillo,cuartos-2,1,0,Ecuador,Noruega,,,,,,,,,,,,,
 Juanillo,cuartos-4,1,3,Argentina,Portugal,,,,,,,,,,,,,
 Juanillo,semis-1,1,2,Francia,España,,,,,,,,,,,,,
 Juanillo,semis-2,1,2,Ecuador,Portugal,,,,,,,,,,,,,
@@ -2087,13 +2195,13 @@ Fran,octavos-2,1,3,Canadá,Marruecos,,,,,,,,,,,,,
 Fran,octavos-1,1,2,Alemania,Francia,,,,,,,,,,,,,
 Fran,octavos-3,2,0,Brasil,Ecuador,,,,,,,,,,,,,
 Fran,octavos-4,1,2,México,Inglaterra,,,,,,,,,,,,,
-Fran,octavos-6,1,2,Ghana,España,,,,,,,,,,,,,
-Fran,octavos-5,1,2,Turquía,Bélgica,,,,,,,,,,,,,
+Fran,octavos-5,1,2,Ghana,España,,,,,,,,,,,,,
+Fran,octavos-6,1,2,Turquía,Bélgica,,,,,,,,,,,,,
 Fran,octavos-7,2,0,Argentina,Estados Unidos,,,,,,,,,,,,,
 Fran,octavos-8,1,3,Suiza,Portugal,,,,,,,,,,,,,
 Fran,cuartos-1,2,1,Francia,Marruecos,,,,,,,,,,,,,
-Fran,cuartos-2,2,0,España,Bélgica,,,,,,,,,,,,,
-Fran,cuartos-3,3,2,Brasil,Inglaterra,,,,,,,,,,,,,
+Fran,cuartos-3,2,0,España,Bélgica,,,,,,,,,,,,,
+Fran,cuartos-2,3,2,Brasil,Inglaterra,,,,,,,,,,,,,
 Fran,cuartos-4,1,3,Argentina,Portugal,,,,,,,,,,,,,
 Fran,semis-1,1,3,Francia,España,,,,,,,,,,,,,
 Fran,semis-2,2,2,Brasil,Portugal,,,,,,,,,,,,,
@@ -2119,13 +2227,13 @@ Lebo,octavos-2,1,2,Corea del Sur,Marruecos,,,,,,,,,,,,,
 Lebo,octavos-1,1,2,Alemania,Francia,,,,,,,,,,,,,
 Lebo,octavos-3,2,0,Brasil,Noruega,,,,,,,,,,,,,
 Lebo,octavos-4,1,2,Senegal,Inglaterra,,,,,,,,,,,,,
-Lebo,octavos-6,0,2,Colombia,España,,,,,,,,,,,,,
-Lebo,octavos-5,1,2,Turquía,Bélgica,,,,,,,,,,,,,
+Lebo,octavos-5,0,2,Colombia,España,,,,,,,,,,,,,
+Lebo,octavos-6,1,2,Turquía,Bélgica,,,,,,,,,,,,,
 Lebo,octavos-7,3,1,Argentina,Estados Unidos,,,,,,,,,,,,,
 Lebo,octavos-8,1,3,Canadá,Portugal,,,,,,,,,,,,,
 Lebo,cuartos-1,3,1,Francia,Marruecos,,,,,,,,,,,,,
-Lebo,cuartos-2,1,1,España,Bélgica,,,,,,,,,,,,,
-Lebo,cuartos-3,1,2,Brasil,Inglaterra,,,,,,,,,,,,,
+Lebo,cuartos-3,1,1,España,Bélgica,,,,,,,,,,,,,
+Lebo,cuartos-2,1,2,Brasil,Inglaterra,,,,,,,,,,,,,
 Lebo,cuartos-4,1,2,Argentina,Portugal,,,,,,,,,,,,,
 Lebo,semis-1,2,1,Francia,Bélgica,,,,,,,,,,,,,
 Lebo,semis-2,1,2,Inglaterra,Portugal,,,,,,,,,,,,,
@@ -2151,13 +2259,13 @@ Crivi,octavos-2,1,2,Bosnia y Herzegovina,Países Bajos,,,,,,,,,,,,,
 Crivi,octavos-1,1,3,Alemania,Francia,,,,,,,,,,,,,
 Crivi,octavos-3,2,1,Brasil,Senegal,,,,,,,,,,,,,
 Crivi,octavos-4,0,2,Costa de Marfil,Inglaterra,,,,,,,,,,,,,
-Crivi,octavos-6,1,1,Colombia,España,,,,,,,,,,,,,
-Crivi,octavos-5,1,1,Turquía,Bélgica,,,,,,,,,,,,,
+Crivi,octavos-5,1,1,Colombia,España,,,,,,,,,,,,,
+Crivi,octavos-6,1,1,Turquía,Bélgica,,,,,,,,,,,,,
 Crivi,octavos-7,2,0,Argentina,Egipto,,,,,,,,,,,,,
 Crivi,octavos-8,1,3,Suiza,Portugal,,,,,,,,,,,,,
 Crivi,cuartos-1,2,0,Francia,Países Bajos,,,,,,,,,,,,,
-Crivi,cuartos-2,3,1,España,Turquía,,,,,,,,,,,,,
-Crivi,cuartos-3,1,1,Brasil,Inglaterra,,,,,,,,,,,,,
+Crivi,cuartos-3,3,1,España,Turquía,,,,,,,,,,,,,
+Crivi,cuartos-2,1,1,Brasil,Inglaterra,,,,,,,,,,,,,
 Crivi,cuartos-4,2,0,Argentina,Portugal,,,,,,,,,,,,,
 Crivi,semis-1,2,2,Francia,España,,,,,,,,,,,,,
 Crivi,semis-2,1,2,Brasil,Argentina,,,,,,,,,,,,,
@@ -2183,13 +2291,13 @@ Pati,octavos-2,0,2,Corea del Sur,Marruecos,,,,,,,,,,,,,
 Pati,octavos-1,2,2,Alemania,Francia,,,,,,,,,,,,,
 Pati,octavos-3,2,2,Brasil,Senegal,,,,,,,,,,,,,
 Pati,octavos-4,1,0,México,Croacia,,,,,,,,,,,,,
-Pati,octavos-6,2,3,Inglaterra,España,,,,,,,,,,,,,
-Pati,octavos-5,0,2,Noruega,Bélgica,,,,,,,,,,,,,
+Pati,octavos-5,2,3,Inglaterra,España,,,,,,,,,,,,,
+Pati,octavos-6,0,2,Noruega,Bélgica,,,,,,,,,,,,,
 Pati,octavos-7,4,0,Argentina,Estados Unidos,,,,,,,,,,,,,
 Pati,octavos-8,1,3,Canadá,Portugal,,,,,,,,,,,,,
 Pati,cuartos-1,3,1,Alemania,Marruecos,,,,,,,,,,,,,
-Pati,cuartos-2,2,1,España,Bélgica,,,,,,,,,,,,,
-Pati,cuartos-3,1,1,Senegal,México,,,,,,,,,,,,,
+Pati,cuartos-3,2,1,España,Bélgica,,,,,,,,,,,,,
+Pati,cuartos-2,1,1,Senegal,México,,,,,,,,,,,,,
 Pati,cuartos-4,2,2,Argentina,Portugal,,,,,,,,,,,,,
 Pati,semis-1,3,1,Alemania,España,,,,,,,,,,,,,
 Pati,semis-2,1,3,México,Argentina,,,,,,,,,,,,,
@@ -2215,13 +2323,13 @@ Castillo,octavos-2,0,2,México,Marruecos,,,,,,,,,,,,,
 Castillo,octavos-1,2,1,Alemania,Francia,,,,,,,,,,,,,
 Castillo,octavos-3,2,1,Brasil,Noruega,,,,,,,,,,,,,
 Castillo,octavos-4,1,1,República Checa,Inglaterra,,,,,,,,,,,,,
-Castillo,octavos-6,1,3,Croacia,España,,,,,,,,,,,,,
-Castillo,octavos-5,1,2,Estados Unidos,Bélgica,,,,,,,,,,,,,
+Castillo,octavos-5,1,3,Croacia,España,,,,,,,,,,,,,
+Castillo,octavos-6,1,2,Estados Unidos,Bélgica,,,,,,,,,,,,,
 Castillo,octavos-7,2,1,Argentina,Egipto,,,,,,,,,,,,,
 Castillo,octavos-8,1,2,Suiza,Portugal,,,,,,,,,,,,,
 Castillo,cuartos-1,2,2,Alemania,Marruecos,,,,,,,,,,,,,
-Castillo,cuartos-2,2,1,España,Bélgica,,,,,,,,,,,,,
-Castillo,cuartos-3,1,1,Brasil,Inglaterra,,,,,,,,,,,,,
+Castillo,cuartos-3,2,1,España,Bélgica,,,,,,,,,,,,,
+Castillo,cuartos-2,1,1,Brasil,Inglaterra,,,,,,,,,,,,,
 Castillo,cuartos-4,1,3,Argentina,Portugal,,,,,,,,,,,,,
 Castillo,semis-1,2,1,Alemania,España,,,,,,,,,,,,,
 Castillo,semis-2,1,2,Brasil,Portugal,,,,,,,,,,,,,
@@ -2247,13 +2355,13 @@ Isaac,octavos-2,1,1,México,Japón,,,,,,,,,,,,,
 Isaac,octavos-1,1,1,Alemania,Noruega,,,,,,,,,,,,,
 Isaac,octavos-3,2,4,Países Bajos,Francia,,,,,,,,,,,,,
 Isaac,octavos-4,1,4,Corea del Sur,Inglaterra,,,,,,,,,,,,,
-Isaac,octavos-6,1,3,Colombia,España,,,,,,,,,,,,,
-Isaac,octavos-5,1,3,Paraguay,Bélgica,,,,,,,,,,,,,
+Isaac,octavos-5,1,3,Colombia,España,,,,,,,,,,,,,
+Isaac,octavos-6,1,3,Paraguay,Bélgica,,,,,,,,,,,,,
 Isaac,octavos-7,3,2,Uruguay,Estados Unidos,,,,,,,,,,,,,
 Isaac,octavos-8,1,3,Suiza,Portugal,,,,,,,,,,,,,
 Isaac,cuartos-1,3,1,Alemania,Japón,,,,,,,,,,,,,
-Isaac,cuartos-2,3,2,España,Bélgica,,,,,,,,,,,,,
-Isaac,cuartos-3,2,2,Francia,Inglaterra,,,,,,,,,,,,,
+Isaac,cuartos-3,3,2,España,Bélgica,,,,,,,,,,,,,
+Isaac,cuartos-2,2,2,Francia,Inglaterra,,,,,,,,,,,,,
 Isaac,cuartos-4,1,1,Uruguay,Portugal,,,,,,,,,,,,,
 Isaac,semis-1,1,2,Alemania,España,,,,,,,,,,,,,
 Isaac,semis-2,2,1,Inglaterra,Portugal,,,,,,,,,,,,,
@@ -2279,13 +2387,13 @@ FILTER,octavos-2,1,2,República Checa,Marruecos,,,,,,,,,,,,,
 FILTER,octavos-1,1,2,Alemania,Francia,,,,,,,,,,,,,
 FILTER,octavos-3,2,0,Brasil,Noruega,,,,,,,,,,,,,
 FILTER,octavos-4,2,1,México,Inglaterra,,,,,,,,,,,,,
-FILTER,octavos-6,1,2,Croacia,España,,,,,,,,,,,,,
-FILTER,octavos-5,1,1,Turquía,Bélgica,,,,,,,,,,,,,
+FILTER,octavos-5,1,2,Croacia,España,,,,,,,,,,,,,
+FILTER,octavos-6,1,1,Turquía,Bélgica,,,,,,,,,,,,,
 FILTER,octavos-7,2,1,Argentina,Estados Unidos,,,,,,,,,,,,,
 FILTER,octavos-8,0,1,Suiza,Portugal,,,,,,,,,,,,,
 FILTER,cuartos-1,2,0,Francia,Marruecos,,,,,,,,,,,,,
-FILTER,cuartos-2,2,1,España,Bélgica,,,,,,,,,,,,,
-FILTER,cuartos-3,2,0,Brasil,México,,,,,,,,,,,,,
+FILTER,cuartos-3,2,1,España,Bélgica,,,,,,,,,,,,,
+FILTER,cuartos-2,2,0,Brasil,México,,,,,,,,,,,,,
 FILTER,cuartos-4,1,1,Argentina,Portugal,,,,,,,,,,,,,
 FILTER,semis-1,1,2,Francia,España,,,,,,,,,,,,,
 FILTER,semis-2,1,1,Brasil,Argentina,,,,,,,,,,,,,
@@ -2311,13 +2419,13 @@ Fer,octavos-2,1,3,República Checa,Países Bajos,,,,,,,,,,,,,
 Fer,octavos-1,0,3,Alemania,Francia,,,,,,,,,,,,,
 Fer,octavos-3,2,0,Brasil,Senegal,,,,,,,,,,,,,
 Fer,octavos-4,1,1,México,Inglaterra,,,,,,,,,,,,,
-Fer,octavos-6,1,3,Colombia,España,,,,,,,,,,,,,
-Fer,octavos-5,1,1,Turquía,Bélgica,,,,,,,,,,,,,
+Fer,octavos-5,1,3,Colombia,España,,,,,,,,,,,,,
+Fer,octavos-6,1,1,Turquía,Bélgica,,,,,,,,,,,,,
 Fer,octavos-7,3,1,Argentina,Estados Unidos,,,,,,,,,,,,,
 Fer,octavos-8,1,2,Suiza,Portugal,,,,,,,,,,,,,
 Fer,cuartos-1,3,2,Francia,Países Bajos,,,,,,,,,,,,,
-Fer,cuartos-2,2,1,España,Bélgica,,,,,,,,,,,,,
-Fer,cuartos-3,3,2,Brasil,Inglaterra,,,,,,,,,,,,,
+Fer,cuartos-3,2,1,España,Bélgica,,,,,,,,,,,,,
+Fer,cuartos-2,3,2,Brasil,Inglaterra,,,,,,,,,,,,,
 Fer,cuartos-4,1,3,Argentina,Portugal,,,,,,,,,,,,,
 Fer,semis-1,1,1,Francia,España,,,,,,,,,,,,,
 Fer,semis-2,0,1,Brasil,Portugal,,,,,,,,,,,,,
@@ -2343,13 +2451,13 @@ Aitor,octavos-2,0,2,República Checa,Marruecos,,,,,,,,,,,,,
 Aitor,octavos-1,2,1,Alemania,Francia,,,,,,,,,,,,,
 Aitor,octavos-3,1,3,Brasil,Senegal,,,,,,,,,,,,,
 Aitor,octavos-4,1,0,México,Noruega,,,,,,,,,,,,,
-Aitor,octavos-6,0,1,Colombia,España,,,,,,,,,,,,,
-Aitor,octavos-5,1,2,Canadá,Bélgica,,,,,,,,,,,,,
+Aitor,octavos-5,0,1,Colombia,España,,,,,,,,,,,,,
+Aitor,octavos-6,1,2,Canadá,Bélgica,,,,,,,,,,,,,
 Aitor,octavos-7,2,1,Argentina,Egipto,,,,,,,,,,,,,
 Aitor,octavos-8,0,1,Suiza,Portugal,,,,,,,,,,,,,
 Aitor,cuartos-1,1,0,Alemania,Marruecos,,,,,,,,,,,,,
-Aitor,cuartos-2,2,0,España,Bélgica,,,,,,,,,,,,,
-Aitor,cuartos-3,2,1,Senegal,México,,,,,,,,,,,,,
+Aitor,cuartos-3,2,0,España,Bélgica,,,,,,,,,,,,,
+Aitor,cuartos-2,2,1,Senegal,México,,,,,,,,,,,,,
 Aitor,cuartos-4,1,2,Argentina,Portugal,,,,,,,,,,,,,
 Aitor,semis-1,1,3,Alemania,España,,,,,,,,,,,,,
 Aitor,semis-2,0,1,Senegal,Portugal,,,,,,,,,,,,,
@@ -2375,13 +2483,13 @@ Cuco,octavos-2,1,2,Corea del Sur,Brasil,,,,,,,,,,,,,
 Cuco,octavos-1,0,1,Ecuador,Francia,,,,,,,,,,,,,
 Cuco,octavos-3,0,2,Marruecos,Noruega,,,,,,,,,,,,,
 Cuco,octavos-4,2,1,México,Inglaterra,,,,,,,,,,,,,
-Cuco,octavos-6,0,1,Colombia,España,,,,,,,,,,,,,
-Cuco,octavos-5,2,1,Paraguay,Bélgica,,,,,,,,,,,,,
+Cuco,octavos-5,0,1,Colombia,España,,,,,,,,,,,,,
+Cuco,octavos-6,2,1,Paraguay,Bélgica,,,,,,,,,,,,,
 Cuco,octavos-7,3,1,Argentina,Turquía,,,,,,,,,,,,,
 Cuco,octavos-8,1,2,Suiza,Portugal,,,,,,,,,,,,,
 Cuco,cuartos-1,2,1,Francia,Brasil,,,,,,,,,,,,,
-Cuco,cuartos-2,2,0,España,Paraguay,,,,,,,,,,,,,
-Cuco,cuartos-3,3,1,Noruega,México,,,,,,,,,,,,,
+Cuco,cuartos-3,2,0,España,Paraguay,,,,,,,,,,,,,
+Cuco,cuartos-2,3,1,Noruega,México,,,,,,,,,,,,,
 Cuco,cuartos-4,2,0,Argentina,Portugal,,,,,,,,,,,,,
 Cuco,semis-1,0,2,Francia,España,,,,,,,,,,,,,
 Cuco,semis-2,1,2,Noruega,Argentina,,,,,,,,,,,,,
@@ -2407,13 +2515,13 @@ Presi,octavos-2,0,1,República Checa,Brasil,,,,,,,,,,,,,
 Presi,octavos-1,0,0,Escocia,Suecia,,,,,,,,,,,,,
 Presi,octavos-3,1,1,Marruecos,Francia,,,,,,,,,,,,,
 Presi,octavos-4,1,1,México,Noruega,,,,,,,,,,,,,
-Presi,octavos-6,1,2,Colombia,España,,,,,,,,,,,,,
-Presi,octavos-5,0,1,Bosnia y Herzegovina,Sudáfrica,,,,,,,,,,,,,
+Presi,octavos-5,1,2,Colombia,España,,,,,,,,,,,,,
+Presi,octavos-6,0,1,Bosnia y Herzegovina,Sudáfrica,,,,,,,,,,,,,
 Presi,octavos-7,4,2,Argentina,Turquía,,,,,,,,,,,,,
 Presi,octavos-8,0,2,Canadá,Portugal,,,,,,,,,,,,,
 Presi,cuartos-1,1,2,Suecia,Brasil,,,,,,,,,,,,,
-Presi,cuartos-2,1,0,España,Sudáfrica,,,,,,,,,,,,,
-Presi,cuartos-3,2,2,Marruecos,Noruega,,,,,,,,,,,,,
+Presi,cuartos-3,1,0,España,Sudáfrica,,,,,,,,,,,,,
+Presi,cuartos-2,2,2,Marruecos,Noruega,,,,,,,,,,,,,
 Presi,cuartos-4,2,2,Argentina,Portugal,,,,,,,,,,,,,
 Presi,semis-1,1,3,Brasil,España,,,,,,,,,,,,,
 Presi,semis-2,2,0,Marruecos,Argentina,,,,,,,,,,,,,
@@ -2811,13 +2919,27 @@ function getEquipoClasificadoPronosticado(picks, matchId) {
   return gL > gV ? p.equipoA : p.equipoB;
 }
 
-// Equipo que REALMENTE ganó un cruce ya fijado
+// Equipo que REALMENTE ganó un cruce: prioriza el resultado real fijado en
+// _playoff_partidos, pero si todavía no existe, también acepta el ganador
+// elegido manualmente en el cuadro de Play Off (clic del usuario, guardado
+// en playoffWinners) — así una simulación interactiva en el cuadro también
+// se refleja en la puntuación de Clasificación, igual que ya pasa con el
+// propio cuadro visual.
 function getEquipoClasificadoReal(matchId) {
   const real = getPlayoffPartidoFijado(matchId);
-  if (!real || real.gL === '' || real.gV === '') return null;
-  const gL = parseInt(real.gL), gV = parseInt(real.gV);
-  if (isNaN(gL) || isNaN(gV) || gL === gV) return null;
-  return gL > gV ? real.local : real.visitante;
+  if (real && real.gL !== '' && real.gV !== '') {
+    const gL = parseInt(real.gL), gV = parseInt(real.gV);
+    if (!isNaN(gL) && !isNaN(gV) && gL !== gV) {
+      return gL > gV ? real.local : real.visitante;
+    }
+    return null; // empate sin desempate
+  }
+  // Sin resultado real: usar la elección manual del cuadro de Play Off, si existe
+  const side = playoffWinners[matchId];
+  if (!side) return null;
+  const match = findPlayoffMatchById(matchId);
+  if (!match) return null;
+  return side === 'A' ? match.teamA : match.teamB;
 }
 
 function calcPlayoffPointsForPlayer(jugador) {
@@ -3678,20 +3800,32 @@ const DIECISEISAVOS_DEF = [
   { id:'R16-16', a:'1K', b:'3DEIJL' },    // Partido 88
 ];
 
-// Emparejamientos oficiales de octavos de final (partidos 89 a 96): NO son
-// simplemente consecutivos (R16-1 vs R16-2, R16-3 vs R16-4...), siguen un
-// cruce específico del bracket oficial. octavosCruces[i] = [idxA, idxB]
-// son los índices (0-based) dentro de DIECISEISAVOS_DEF de los dos
-// dieciseisavos cuyos ganadores se enfrentan en ese octavo.
+// Emparejamientos oficiales de octavos de final (partidos 89 a 96), según
+// el bracket oficial visual de la FIFA. NO son simplemente consecutivos
+// (R16-1 vs R16-2, R16-3 vs R16-4...), siguen un cruce específico.
+// OCTAVOS_CRUCES[i] = [idxA, idxB] son los índices (0-based) dentro de
+// DIECISEISAVOS_DEF de los dos dieciseisavos cuyos ganadores se enfrentan.
 const OCTAVOS_CRUCES = [
   [1, 4],   // Partido 89: Ganador 74 (R16-2) vs Ganador 77 (R16-5)
   [0, 2],   // Partido 90: Ganador 73 (R16-1) vs Ganador 75 (R16-3)
   [3, 5],   // Partido 91: Ganador 76 (R16-4) vs Ganador 78 (R16-6)
   [6, 7],   // Partido 92: Ganador 79 (R16-7) vs Ganador 80 (R16-8)
-  [8, 9],   // Partido 93: Ganador 81 (R16-9) vs Ganador 82 (R16-10)
-  [11, 10], // Partido 94: Ganador 84 (R16-12) vs Ganador 83 (R16-11)
-  [13, 12], // Partido 95: Ganador 86 (R16-14) vs Ganador 85 (R16-13)
-  [15, 14], // Partido 96: Ganador 88 (R16-16) vs Ganador 87 (R16-15)
+  [10, 11], // Partido 93: Ganador 83 (R16-11) vs Ganador 84 (R16-12)
+  [8, 9],   // Partido 94: Ganador 81 (R16-9) vs Ganador 82 (R16-10)
+  [13, 15], // Partido 95: Ganador 86 (R16-14) vs Ganador 88 (R16-16)
+  [12, 14], // Partido 96: Ganador 85 (R16-13) vs Ganador 87 (R16-15)
+];
+
+// Emparejamientos oficiales de cuartos de final (partidos 97 a 100): igual
+// que en octavos, no son consecutivos simples sobre las 8 octavos — siguen
+// el cruce real del bracket (M97=89v90, M98=93v94, M99=91v92, M100=95v96).
+// CUARTOS_CRUCES[i] = [idxA, idxB] son índices 0-based dentro de la ronda
+// de octavos (octavos-1..octavos-8 → índices 0..7).
+const CUARTOS_CRUCES = [
+  [0, 1], // Partido 97:  Ganador 89 (octavos-1) vs Ganador 90 (octavos-2)
+  [4, 5], // Partido 98:  Ganador 93 (octavos-5) vs Ganador 94 (octavos-6)
+  [2, 3], // Partido 99:  Ganador 91 (octavos-3) vs Ganador 92 (octavos-4)
+  [6, 7], // Partido 100: Ganador 95 (octavos-7) vs Ganador 96 (octavos-8)
 ];
 
 // Indica si el equipo asignado a un cajón (1A, 2B, 3ABCDF...) ya es
@@ -3805,6 +3939,18 @@ function isMatchLocked(m) {
 
 // Construye dinámicamente las rondas siguientes (octavos, cuartos, semis, final)
 // a partir de los ganadores ya marcados/fijados de la ronda anterior.
+// Busca un partido del cuadro (cualquier ronda, incluido 3er/4º puesto) por
+// su matchId, ya con los nombres de equipo resueltos. Se usa para poder
+// traducir una elección manual del usuario (playoffWinners, que solo guarda
+// 'A'/'B') al nombre real del equipo.
+function findPlayoffMatchById(matchId) {
+  const rounds = buildPlayoffRounds();
+  const match = rounds.flat().find(m => m.id === matchId);
+  if (match) return match;
+  if (rounds.tercerPuesto) return rounds.tercerPuesto.find(m => m.id === matchId) || null;
+  return null;
+}
+
 function buildPlayoffRounds() {
   const rounds = [];
 
@@ -3850,10 +3996,30 @@ function buildPlayoffRounds() {
           fijado,
         });
       });
+    } else if (r === 1) {
+      // Octavos → Cuartos: tampoco son emparejamientos consecutivos sobre
+      // las 8 octavos — siguen el cruce oficial (partidos 97-100),
+      // definido en CUARTOS_CRUCES como pares de índices dentro de la
+      // ronda de octavos.
+      CUARTOS_CRUCES.forEach(([idxA, idxB], i) => {
+        const m1 = prev[idxA], m2 = prev[idxB];
+        const w1 = getWinnerSide(m1);
+        const w2 = getWinnerSide(m2);
+        const teamA = w1 === 'A' ? m1.teamA : w1 === 'B' ? m1.teamB : null;
+        const teamB = w2 === 'A' ? m2.teamA : w2 === 'B' ? m2.teamB : null;
+        const id = `cuartos-${i+1}`;
+        const fijado = getPlayoffPartidoFijado(id);
+        next.push({
+          id, slotA: m1.id, slotB: m2.id,
+          teamA: (fijado && fijado.local) ? fijado.local : teamA,
+          teamB: (fijado && fijado.visitante) ? fijado.visitante : teamB,
+          fijado,
+        });
+      });
     } else {
-      // Octavos→Cuartos, Cuartos→Semis, Semis→Final: emparejamiento
-      // consecutivo simple (ganador del 1º vs ganador del 2º, etc.), que
-      // sí coincide con el orden oficial a partir de aquí.
+      // Cuartos→Semis, Semis→Final: emparejamiento consecutivo simple
+      // (ganador del 1º vs ganador del 2º, etc.), que sí coincide con el
+      // orden oficial a partir de aquí.
       for (let i = 0; i < prev.length; i += 2) {
         const m1 = prev[i], m2 = prev[i+1];
         const w1 = getWinnerSide(m1);
@@ -3940,27 +4106,32 @@ function renderPlayoff() {
     </div>`;
   };
 
+  // ── Construir las dos "pathways" del bracket (izquierda y derecha) tal
+  // como en el bracket oficial: cada pathway tiene un bloque TOP y un
+  // bloque BOTTOM de 2 dieciseisavos → 1 octavo cada uno, 2 octavos → 1
+  // cuarto, y los 2 cuartos de la pathway → 1 semifinal.
+  const r16 = rounds[0], oct = rounds[1] || [], cua = rounds[2] || [], sem = rounds[3] || [];
+
+  // Pathway 1 (izquierda): los 8 dieciseisavos en el orden visual de la
+  // imagen (top: 74,77,73,75 — bottom: 83,84,81,82), sus 4 octavos
+  // correspondientes, sus 2 cuartos y su semifinal.
+  const pathway1 = {
+    r16: [r16[1], r16[4], r16[0], r16[2], r16[10], r16[11], r16[8], r16[9]],
+    oct: [oct[0], oct[1], oct[4], oct[5]],
+    cua: [cua[0], cua[1]],
+    semi: sem[0],
+  };
+  // Pathway 2 (derecha): top: 76,78,79,80 — bottom: 86,88,85,87
+  const pathway2 = {
+    r16: [r16[3], r16[5], r16[6], r16[7], r16[13], r16[15], r16[12], r16[14]],
+    oct: [oct[2], oct[3], oct[6], oct[7]],
+    cua: [cua[2], cua[3]],
+    semi: sem[1],
+  };
+
   let html = `<button class="po-reset-btn" onclick="resetPlayoff()">↺ Reiniciar mis pronósticos</button>`;
-  html += `<div class="playoff-wrapper"><div class="playoff-board">`;
 
-  rounds.forEach((round, rIdx) => {
-    const title = ROUND_TITLES[rIdx] || '';
-    html += `<div class="playoff-round">
-      <div class="playoff-round-title">${title}</div>
-      <div class="playoff-matches">`;
-
-    round.forEach(m => { html += renderMatchCard(m); });
-
-    // La columna de Semifinales también muestra el cruce de 3er/4º puesto debajo
-    if (title === 'SEMIFINALES' && rounds.tercerPuesto) {
-      html += `<div class="playoff-round-title" style="margin-top:1rem">🥉 3.º Y 4.º PUESTO</div>`;
-      html += renderMatchCard(rounds.tercerPuesto[0]);
-    }
-
-    html += `</div></div>`;
-  });
-
-  // Caja de campeón final
+  // Caja de campeón final (se muestra en el centro del bracket)
   const finalRound = rounds[rounds.length - 1];
   let campeonFinal = null;
   if (finalRound && finalRound.length === 1) {
@@ -3969,11 +4140,54 @@ function renderPlayoff() {
     if (w === 'B') campeonFinal = finalRound[0].teamB;
   }
 
-  html += `<div class="po-final-trophy">
-    <div class="playoff-round-title">CAMPEÓN</div>
-    <div class="po-champion-box">${campeonFinal ? '🏆 ' + campeonFinal : '?'}</div>
+  // Cada columna del bracket es un grid-column explícito (1=R32 izq ... 9=R32 der)
+  // así no depende del orden de aparición en el HTML, evitando ambigüedades.
+  // esPrimeraColumna=true (R32) no dibuja el conector "de entrada" porque no
+  // tiene una ronda anterior de la que venir.
+  const renderCol = (cards, gridCol, lado, esPrimeraColumna) => {
+    let h = `<div class="bracket-col" style="grid-column:${gridCol}">`;
+    cards.forEach((m, i) => {
+      // Dentro de cada pareja que alimenta al siguiente partido, el de
+      // índice par es el "de arriba" (conn-top) y el impar el "de abajo"
+      // (conn-bottom) — salvo que solo haya 1 partido en la columna (la
+      // semifinal de la pathway), que no necesita conector de salida.
+      const connSalida = cards.length > 1 ? (i % 2 === 0 ? 'bracket-conn-top' : 'bracket-conn-bottom') : '';
+      const connEntrada = esPrimeraColumna ? '' : 'bracket-conn-in';
+      h += `<div class="bracket-match-wrap bracket-${lado} ${connSalida} ${connEntrada}">${renderMatchCard(m)}</div>`;
+    });
+    return h + `</div>`;
+  };
+
+  const renderPathway = (pathway, lado) => {
+    // Columnas del lado izquierdo: 1=R32, 2=R16, 3=QF, 4=SF
+    // Columnas del lado derecho:   6=SF, 7=QF, 8=R16, 9=R32
+    const cols = lado === 'left' ? [1, 2, 3, 4] : [9, 8, 7, 6];
+    let h = '';
+    h += renderCol(pathway.r16, cols[0], lado, true);
+    h += renderCol(pathway.oct, cols[1], lado, false);
+    h += renderCol(pathway.cua, cols[2], lado, false);
+    // La columna de semifinal tiene un único partido: no necesita conector
+    // de "pareja" (conn-top/bottom), pero sí uno simple hacia la Final central.
+    h += `<div class="bracket-col" style="grid-column:${cols[3]}">
+      <div class="bracket-match-wrap bracket-${lado} bracket-conn-in bracket-conn-final">${renderMatchCard(pathway.semi)}</div>
+    </div>`;
+    return h;
+  };
+
+  html += `<div class="bracket-titles">
+    <span>R32</span><span>R16</span><span>QF</span><span>SF</span>
+    <span class="bracket-titles-center">F</span>
+    <span>SF</span><span>QF</span><span>R16</span><span>R32</span>
   </div>`;
 
+  html += `<div class="bracket-wrapper"><div class="bracket-container">`;
+  html += renderPathway(pathway1, 'left');
+  html += `<div class="bracket-center">
+    <div class="bracket-match-wrap bracket-match-wrap-final">${renderMatchCard(finalRound[0])}</div>
+    <div class="po-champion-box" style="margin-top:0.75rem">${campeonFinal ? '🏆 ' + campeonFinal : '?'}</div>
+    ${rounds.tercerPuesto ? `<div class="bracket-bronze-label">🥉 3º Y 4º PUESTO</div><div class="bracket-match-wrap">${renderMatchCard(rounds.tercerPuesto[0])}</div>` : ''}
+  </div>`;
+  html += renderPathway(pathway2, 'right');
   html += `</div></div>`;
 
   html += `<div style="margin-top:1rem;font-size:0.75rem;color:var(--muted);line-height:1.6">
