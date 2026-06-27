@@ -264,44 +264,44 @@
     "gV": "0"
   },
   "67": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "68": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "69": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "70": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "71": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "72": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "73": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "74": {
-    "gL": "",
-    "gV": ""
+    "gL": "0",
+    "gV": "0"
   },
   "_predicciones": {
-    "campeon": "",
+    "campeon": "España",
     "subcampeon": "",
     "tercero": ""
   },
   "_premios": {
-    "bota_oro": "",
+    "bota_oro": "Mbappe",
     "bota_plata": "",
     "bota_bronce": "",
     "balon_oro": "",
@@ -314,8 +314,8 @@
       "match": "R16-1",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "28 Jun",
       "bonus": 1
     },
@@ -324,8 +324,8 @@
       "match": "R16-2",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "29 Jun",
       "bonus": 1
     },
@@ -334,8 +334,8 @@
       "match": "R16-3",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "2",
+      "gV": "2",
       "fecha": "29 Jun",
       "bonus": 1
     },
@@ -344,8 +344,8 @@
       "match": "R16-4",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "30 Jun",
       "bonus": 1
     },
@@ -354,8 +354,8 @@
       "match": "R16-5",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "30 Jun",
       "bonus": 1
     },
@@ -364,8 +364,8 @@
       "match": "R16-6",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "30 Jun",
       "bonus": 1
     },
@@ -374,8 +374,8 @@
       "match": "R16-7",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "1 Jul",
       "bonus": 1
     },
@@ -384,8 +384,8 @@
       "match": "R16-8",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "1 Jul",
       "bonus": 1
     },
@@ -394,8 +394,8 @@
       "match": "R16-9",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "1 Jul",
       "bonus": 1
     },
@@ -404,8 +404,8 @@
       "match": "R16-10",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "2 Jul",
       "bonus": 1
     },
@@ -414,8 +414,8 @@
       "match": "R16-11",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "2 Jul",
       "bonus": 1
     },
@@ -424,8 +424,8 @@
       "match": "R16-12",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "3 Jul",
       "bonus": 1
     },
@@ -434,8 +434,8 @@
       "match": "R16-13",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "3 Jul",
       "bonus": 1
     },
@@ -444,8 +444,8 @@
       "match": "R16-14",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "3 Jul",
       "bonus": 1
     },
@@ -454,8 +454,8 @@
       "match": "R16-15",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "4 Jul",
       "bonus": 1
     },
@@ -464,8 +464,8 @@
       "match": "R16-16",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "4 Jul",
       "bonus": 1
     },
@@ -474,8 +474,8 @@
       "match": "octavos-1",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "4 Jul",
       "bonus": 1
     },
@@ -484,8 +484,8 @@
       "match": "octavos-2",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "4 Jul",
       "bonus": 1
     },
@@ -494,8 +494,8 @@
       "match": "octavos-3",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "5 Jul",
       "bonus": 1
     },
@@ -504,8 +504,8 @@
       "match": "octavos-4",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "5 Jul",
       "bonus": 1
     },
@@ -514,8 +514,8 @@
       "match": "octavos-5",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "6 Jul",
       "bonus": 1
     },
@@ -524,8 +524,8 @@
       "match": "octavos-6",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "6 Jul",
       "bonus": 1
     },
@@ -534,8 +534,8 @@
       "match": "octavos-7",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "7 Jul",
       "bonus": 1
     },
@@ -544,8 +544,8 @@
       "match": "octavos-8",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "7 Jul",
       "bonus": 1
     },
@@ -554,8 +554,8 @@
       "match": "cuartos-1",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "9 Jul",
       "bonus": 1
     },
@@ -564,8 +564,8 @@
       "match": "cuartos-2",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "10 Jul",
       "bonus": 1
     },
@@ -574,8 +574,8 @@
       "match": "cuartos-3",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "11 Jul",
       "bonus": 1
     },
@@ -584,8 +584,8 @@
       "match": "cuartos-4",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "11 Jul",
       "bonus": 1
     },
@@ -594,8 +594,8 @@
       "match": "semis-1",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "14 Jul",
       "bonus": 1
     },
@@ -604,8 +604,8 @@
       "match": "semis-2",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "15 Jul",
       "bonus": 1
     },
@@ -614,8 +614,8 @@
       "match": "tercer-1",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "18 Jul",
       "bonus": 1
     },
@@ -624,8 +624,8 @@
       "match": "final-1",
       "local": "",
       "visitante": "",
-      "gL": "",
-      "gV": "",
+      "gL": "1",
+      "gV": "0",
       "fecha": "19 Jul",
       "bonus": 1
     }
