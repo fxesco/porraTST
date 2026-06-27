@@ -240,12 +240,12 @@
     "gV": "3"
   },
   "61": {
-    "gL": "0",
-    "gV": "0"
+    "gL": "1",
+    "gV": "1"
   },
   "62": {
-    "gL": "0",
-    "gV": "0"
+    "gL": "1",
+    "gV": "5"
   },
   "63": {
     "gL": "0",
@@ -253,47 +253,47 @@
   },
   "64": {
     "gL": "0",
-    "gV": "0"
+    "gV": "1"
   },
   "65": {
-    "gL": "0",
-    "gV": "0"
+    "gL": "1",
+    "gV": "4"
   },
   "66": {
-    "gL": "0",
+    "gL": "5",
     "gV": "0"
   },
   "67": {
-    "gL": "0",
-    "gV": "0"
+    "gL": "",
+    "gV": ""
   },
   "68": {
-    "gL": "0",
-    "gV": "0"
+    "gL": "",
+    "gV": ""
   },
   "69": {
-    "gL": "0",
-    "gV": "0"
+    "gL": "",
+    "gV": ""
   },
   "70": {
-    "gL": "0",
-    "gV": "0"
+    "gL": "",
+    "gV": ""
   },
   "71": {
-    "gL": "0",
-    "gV": "0"
+    "gL": "",
+    "gV": ""
   },
   "72": {
-    "gL": "0",
-    "gV": "0"
+    "gL": "",
+    "gV": ""
   },
   "73": {
-    "gL": "0",
-    "gV": "0"
+    "gL": "",
+    "gV": ""
   },
   "74": {
-    "gL": "0",
-    "gV": "0"
+    "gL": "",
+    "gV": ""
   },
   "_predicciones": {
     "campeon": "",
@@ -308,24 +308,14 @@
     "balon_plata": "",
     "balon_bronce": ""
   },
-  "_playoff_slots": {
-    "3ABCDF": "",
-    "3CDFGH": "",
-    "3CEFHI": "",
-    "3EHIJK": "",
-    "3AEHIJ": "",
-    "3BEFIJ": "",
-    "3EFGIJ": "",
-    "3DEIJL": ""
-  },
   "_playoff_partidos": [
     {
       "ronda": "dieciseisavos",
       "match": "R16-1",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "28 Jun",
       "bonus": 1
     },
@@ -334,8 +324,8 @@
       "match": "R16-2",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "29 Jun",
       "bonus": 1
     },
@@ -344,8 +334,8 @@
       "match": "R16-3",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "29 Jun",
       "bonus": 1
     },
@@ -354,8 +344,8 @@
       "match": "R16-4",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "30 Jun",
       "bonus": 1
     },
@@ -364,16 +354,16 @@
       "match": "R16-5",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "30 Jun",
       "bonus": 1
     },
     {
       "ronda": "dieciseisavos",
       "match": "R16-6",
-      "local": "1",
-      "visitante": "0",
+      "local": "",
+      "visitante": "",
       "gL": "",
       "gV": "",
       "fecha": "30 Jun",
@@ -384,8 +374,8 @@
       "match": "R16-7",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "1 Jul",
       "bonus": 1
     },
@@ -394,8 +384,8 @@
       "match": "R16-8",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "1 Jul",
       "bonus": 1
     },
@@ -404,8 +394,8 @@
       "match": "R16-9",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "1 Jul",
       "bonus": 1
     },
@@ -414,8 +404,8 @@
       "match": "R16-10",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "2 Jul",
       "bonus": 1
     },
@@ -424,8 +414,8 @@
       "match": "R16-11",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "2 Jul",
       "bonus": 1
     },
@@ -434,8 +424,8 @@
       "match": "R16-12",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "3 Jul",
       "bonus": 1
     },
@@ -444,8 +434,8 @@
       "match": "R16-13",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "3 Jul",
       "bonus": 1
     },
@@ -454,8 +444,8 @@
       "match": "R16-14",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "3 Jul",
       "bonus": 1
     },
@@ -464,8 +454,8 @@
       "match": "R16-15",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "4 Jul",
       "bonus": 1
     },
@@ -474,20 +464,180 @@
       "match": "R16-16",
       "local": "",
       "visitante": "",
-      "gL": "1",
-      "gV": "0",
+      "gL": "",
+      "gV": "",
       "fecha": "4 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "octavos",
+      "match": "octavos-1",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "4 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "octavos",
+      "match": "octavos-2",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "4 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "octavos",
+      "match": "octavos-3",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "5 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "octavos",
+      "match": "octavos-4",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "5 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "octavos",
+      "match": "octavos-5",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "6 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "octavos",
+      "match": "octavos-6",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "6 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "octavos",
+      "match": "octavos-7",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "7 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "octavos",
+      "match": "octavos-8",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "7 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "cuartos",
+      "match": "cuartos-1",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "9 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "cuartos",
+      "match": "cuartos-2",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "10 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "cuartos",
+      "match": "cuartos-3",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "11 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "cuartos",
+      "match": "cuartos-4",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "11 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "semis",
+      "match": "semis-1",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "14 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "semis",
+      "match": "semis-2",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "15 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "tercer_puesto",
+      "match": "tercer-1",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "18 Jul",
+      "bonus": 1
+    },
+    {
+      "ronda": "final",
+      "match": "final-1",
+      "local": "",
+      "visitante": "",
+      "gL": "",
+      "gV": "",
+      "fecha": "19 Jul",
       "bonus": 1
     }
   ],
   "_ayuda": {
     "como_usar": [
-      "1) Partidos de FASE DE GRUPOS: son las claves numericas (\"1\",\"2\"...\"72\"). Solo rellena gL y gV.",
-      "2) Partidos de ELIMINATORIA (dieciseisavos en adelante): estan en _playoff_partidos, ya con un hueco por cada cruce.",
-      "   - local/visitante: dejalos vacios y la web pondra el 1o/2o de grupo automaticamente.",
-      "     Si quieres fijar el nombre tu mismo (p.ej. un tercero clasificado), escribelo ahi y se usara ese en vez del calculo automatico.",
-      "   - gL/gV: vacios mientras el partido no se juega (lo podras pronosticar en la web). En cuanto pongas el resultado, ese cruce queda bloqueado y el cuadro avanza solo.",
-      "3) Cuando acaben los dieciseisavos, añade un nuevo bloque a _playoff_partidos para octavos copiando el formato (match: octavos-1 ... octavos-8), y asi en cada ronda."
+      "1) Partidos de FASE DE GRUPOS: son las claves numericas (\"1\" a \"72\"). Solo rellena gL y gV.",
+      "2) Partidos de ELIMINATORIA (dieciseisavos en adelante): TODOS los 32 cruces (16 dieciseisavos, 8 octavos, 4 cuartos, 2 semis, 1 tercer puesto y 1 final) ya estan precargados en _playoff_partidos, con sus fechas oficiales. No hace falta anadir nada nuevo, solo rellenar.",
+      "   - local/visitante: dejalos vacios y la web pone el equipo correcto automaticamente (1o/2o de grupo, mejor tercero, o ganador de la ronda anterior). Si quieres forzar el nombre tu mismo, escribelo ahi.",
+      "   - gL/gV: vacios mientras el partido no se ha jugado (se puede pronosticar en la web haciendo clic en el cuadro de Play Off). En cuanto pongas el resultado real aqui, ese cruce queda bloqueado, los puntos se calculan solos, y el ganador avanza automaticamente a la siguiente ronda.",
+      "3) Terceros clasificados: se calculan solos en cuanto su posicion entre los 8 mejores sea matematicamente segura (no hace falta tocar nada).",
+      "4) IDs de cada ronda disponibles abajo en 'matches_disponibles_por_ronda'."
     ],
     "matches_disponibles_por_ronda": {
       "dieciseisavos": [
@@ -508,86 +658,6 @@
         "R16-15",
         "R16-16"
       ],
-      {
-          "ronda": "octavos",
-          "match": "octavos-1",
-          "local": "",
-          "visitante": "",
-          "gL": "",
-          "gV": "",
-          "fecha": "2 Jul",
-          "bonus": 1
-        },
-    {
-  "ronda": "octavos",
-  "match": "octavos-2",
-  "local": "",
-  "visitante": "",
-  "gL": "",
-  "gV": "",
-  "fecha": "2 Jul",
-  "bonus": 1
-},
-  {
-  "ronda": "octavos",
-  "match": "octavos-3",
-  "local": "",
-  "visitante": "",
-  "gL": "",
-  "gV": "",
-  "fecha": "2 Jul",
-  "bonus": 1
-},
-{
-  "ronda": "octavos",
-  "match": "octavos-4",
-  "local": "",
-  "visitante": "",
-  "gL": "",
-  "gV": "",
-  "fecha": "2 Jul",
-  "bonus": 1
-},
-{
-  "ronda": "octavos",
-  "match": "octavos-5",
-  "local": "",
-  "visitante": "",
-  "gL": "",
-  "gV": "",
-  "fecha": "2 Jul",
-  "bonus": 1
-},
-{
-  "ronda": "octavos",
-  "match": "octavos-6",
-  "local": "",
-  "visitante": "",
-  "gL": "",
-  "gV": "",
-  "fecha": "2 Jul",
-  "bonus": 1
-},
-{
-  "ronda": "octavos",
-  "match": "octavos-7",
-  "local": "",
-  "visitante": "",
-  "gL": "",
-  "gV": "",
-  "fecha": "2 Jul",
-  "bonus": 1
-},
-{
-  "ronda": "octavos",
-  "match": "octavos-8",
-  "local": "",
-  "visitante": "",
-  "gL": "",
-  "gV": "",
-  "fecha": "2 Jul",
-  "bonus": 1
-}
       "octavos": [
         "octavos-1",
         "octavos-2",
