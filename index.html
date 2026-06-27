@@ -629,10 +629,10 @@
     /* ── PLAY OFF ── */
     .bracket-titles {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1fr 1fr;
-      gap: 0.4rem;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+      gap: 0.8rem;
       margin-bottom: 0.5rem;
-      min-width: 960px;
+      min-width: 680px;
     }
     .bracket-titles span {
       font-family: 'JetBrains Mono', monospace;
@@ -649,9 +649,9 @@
 
     .bracket-container {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1fr 1fr;
-      gap: 1.4rem;
-      min-width: 1100px;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+      gap: 0.8rem;
+      min-width: 680px;
       align-items: stretch;
     }
 
@@ -686,7 +686,7 @@
       content: '';
       position: absolute;
       top: 50%;
-      width: 0.7rem;
+      width: 0.4rem;
       height: 50%;
       border-top: 1px solid var(--border);
     }
@@ -695,18 +695,18 @@
       content: '';
       position: absolute;
       top: 0;
-      width: 0.7rem;
+      width: 0.4rem;
       height: 50%;
       border-bottom: 1px solid var(--border);
     }
     .bracket-left.bracket-conn-top::after,
     .bracket-left.bracket-conn-bottom::after {
-      right: -0.7rem;
+      right: -0.4rem;
       border-right: 1px solid var(--border);
     }
     .bracket-right.bracket-conn-top::before,
     .bracket-right.bracket-conn-bottom::before {
-      left: -0.7rem;
+      left: -0.4rem;
       border-left: 1px solid var(--border);
     }
     /* Trazo de entrada al partido siguiente: un pequeño segmento horizontal
@@ -715,18 +715,18 @@
     .bracket-left.bracket-conn-in::before {
       content: '';
       position: absolute;
-      left: -0.7rem;
+      left: -0.4rem;
       top: 50%;
-      width: 0.7rem;
+      width: 0.4rem;
       height: 1px;
       background: var(--border);
     }
     .bracket-right.bracket-conn-in::after {
       content: '';
       position: absolute;
-      right: -0.7rem;
+      right: -0.4rem;
       top: 50%;
-      width: 0.7rem;
+      width: 0.4rem;
       height: 1px;
       background: var(--border);
     }
@@ -737,18 +737,18 @@
     .bracket-left.bracket-conn-final::after {
       content: '';
       position: absolute;
-      right: -0.7rem;
+      right: -0.4rem;
       top: 50%;
-      width: 0.7rem;
+      width: 0.4rem;
       height: 1px;
       background: var(--border);
     }
     .bracket-right.bracket-conn-final::before {
       content: '';
       position: absolute;
-      left: -0.7rem;
+      left: -0.4rem;
       top: 50%;
-      width: 0.7rem;
+      width: 0.4rem;
       height: 1px;
       background: var(--border);
     }
@@ -783,6 +783,80 @@
 
     .po-match.bonus-match { border-color: var(--gold); }
     .po-match.locked { border-color: #2a4a3a; background: linear-gradient(135deg, var(--card), #0d1f15); }
+
+    /* ── Modo circular (estilo "Fabrizio Romano"): cada partido son dos
+       círculos con la bandera grande, uno junto al otro con un "VS" entre
+       ellos, sin nombre de país en texto. ── */
+    .po-match-circular {
+      background: transparent;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .po-slot-circular {
+      width: 3.1rem;
+      height: 3.1rem;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      transition: border-color 0.12s, transform 0.12s;
+    }
+    .po-slot-circular:hover { transform: scale(1.06); }
+    .po-slot-circular.readonly { cursor: default; }
+    .po-slot-circular.readonly:hover { transform: none; }
+
+    .po-slot-circular.placeholder {
+      border-style: dashed;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .po-slot-circular.placeholder:hover { transform: none; }
+
+    .po-slot-circular.winner { border-color: var(--lime); box-shadow: 0 0 0 2px rgba(200,241,53,0.25); }
+    .po-slot-circular.loser { opacity: 0.4; }
+    .po-slot-circular.confirmado { border-color: var(--gold); }
+
+    .po-slot-circular .po-slot-lock {
+      position: absolute;
+      bottom: -0.25rem;
+      right: -0.15rem;
+      font-size: 0.62rem;
+      background: var(--pitch);
+      border-radius: 50%;
+      padding: 0.05rem;
+    }
+
+    .po-vs-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .po-score-circular {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.1rem;
+      flex-shrink: 0;
+    }
+    .po-score-circular .po-score-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.85rem;
+      color: var(--gold);
+      line-height: 1;
+    }
 
     .po-slot {
       display: flex;
@@ -4078,37 +4152,39 @@ function renderPlayoff() {
     const locked = isMatchLocked(m);
     const teamA = m.teamA;
     const teamB = m.teamB;
-    const matchCls = locked ? 'po-match locked' : 'po-match';
 
     const fijado = m.fijado;
     const tieneResultado = fijado && fijado.gL !== '' && fijado.gV !== '' && fijado.gL != null && fijado.gV != null;
     const golesA = tieneResultado ? fijado.gL : null;
     const golesB = tieneResultado ? fijado.gV : null;
 
+    // Círculo con la bandera grande, sin nombre del país en texto — el
+    // nombre completo sigue disponible al pasar el cursor (title) para
+    // quien quiera comprobarlo sin perder la lectura rápida del cuadro.
     const slotHtml = (team, side, goles, confirmado) => {
       if (!team) {
-        return `<div class="po-slot placeholder">⏳ Pendiente</div>`;
+        return `<div class="po-slot-circular placeholder">⏳</div>`;
       }
       const isWinner = winner === side;
       const isLoser = winner && winner !== side;
       const clickAttr = locked ? '' : `onclick="pickWinner('${m.id}','${side}')"`;
       const cursorCls = locked ? 'readonly' : '';
-      // "Confirmado" = el equipo ya es definitivo en esa posición (su grupo
-      // ha completado las 3 jornadas), aunque el cruce todavía no se haya
-      // jugado. Se marca con un icono de candado dorado junto al nombre.
       const confirmadoCls = (confirmado && !locked) ? 'confirmado' : '';
-      const cls = `po-slot ${isWinner?'winner':''} ${isLoser?'loser':''} ${cursorCls} ${confirmadoCls}`;
-      const lockIcon = (locked && isWinner) ? ' ✓' : '';
-      const confirmIcon = (confirmado && !locked) ? ' <span style="color:var(--gold)">🔒</span>' : '';
-      const scoreHtml = goles !== null ? `<span class="po-score">${goles}</span>` : '';
-      return `<div class="${cls}" ${clickAttr}>
-        <span>${getFlag(team)} ${team}${lockIcon}${confirmIcon}</span>
-        ${scoreHtml}
+      const cls = `po-slot-circular ${isWinner?'winner':''} ${isLoser?'loser':''} ${cursorCls} ${confirmadoCls}`;
+      const lockBadge = (locked && isWinner) ? '<span class="po-slot-lock">✓</span>'
+                       : (confirmado && !locked) ? '<span class="po-slot-lock">🔒</span>' : '';
+      return `<div class="${cls}" ${clickAttr} title="${team}">
+        ${getFlag(team)}${lockBadge}
       </div>`;
     };
 
-    return `<div class="${matchCls}">
+    const scoreHtml = tieneResultado
+      ? `<div class="po-score-circular"><span class="po-score-num">${golesA}</span><span class="po-score-num">${golesB}</span></div>`
+      : `<span class="po-vs-label">VS</span>`;
+
+    return `<div class="po-match-circular">
       ${slotHtml(teamA, 'A', golesA, m.confirmadoA)}
+      ${scoreHtml}
       ${slotHtml(teamB, 'B', golesB, m.confirmadoB)}
     </div>`;
   };
