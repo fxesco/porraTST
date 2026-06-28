@@ -1007,20 +1007,13 @@
     <div id="ranking-content"><div class="loading"><div class="spinner"></div>Cargando datos...</div></div>
   </div>
 
-  <!-- ══ PRÓXIMOS PARTIDOS ══ -->
+  <!-- ══ PRÓXIMOS PARTIDOS (ELIMINATORIA) ══ -->
+  <!-- La fase de grupos terminó: ya no habrá más partidos de grupos
+       pendientes, así que este panel ya no necesita el sub-tab de
+       "Fase de grupos" que tenía antes — solo queda eliminatoria. -->
   <div id="panel-upcoming" class="panel">
-    <div class="subtabs">
-      <button class="subtab active" onclick="switchSubTab('upcoming', 'grupos', this)">📅 Fase de grupos</button>
-      <button class="subtab" onclick="switchSubTab('upcoming', 'eliminatoria', this)">🏟️ Eliminatoria</button>
-    </div>
-    <div id="subpanel-upcoming-grupos" class="subpanel active">
-      <div class="section-label">Próximos 5 partidos · pronósticos de todos</div>
-      <div id="upcoming-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
-    </div>
-    <div id="subpanel-upcoming-eliminatoria" class="subpanel">
-      <div class="section-label">Pronósticos de todos para las rondas eliminatorias</div>
-      <div id="upcoming-eliminatoria-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
-    </div>
+    <div class="section-label">Pronósticos de todos para las rondas eliminatorias</div>
+    <div id="upcoming-eliminatoria-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
   </div>
 
   <!-- ══ PLAY OFF ══ -->
@@ -2886,7 +2879,7 @@ async function loadData() {
 
     updateHero();
     renderRanking();
-    renderUpcoming();
+    renderUpcomingEliminatoria();
     renderGroups();
     renderPlayoff();
     renderMatches();
@@ -3380,9 +3373,13 @@ function showDetalle(jugador, concepto) {
           filas.push({ label, pts: 0, sub: tipo === 'cruce_fallado' ? 'cruce distinto al real' : 'resultado fallado' });
         }
       }
-      // Bonus de equipo que avanza (se anota en la ronda anterior, ya cubierto
-      // arriba para dieciseisavos; para el resto de rondas se muestra aquí)
-      if (concepto !== 'dieciseisavos' && concepto !== 'tercerPuesto') {
+      // Bonus de equipo que avanza A LA SIGUIENTE RONDA (p.ej. de
+      // dieciseisavos a octavos). Se muestra en TODAS las rondas, incluida
+      // dieciseisavos — no hay que confundirlo con el bonus de fase de
+      // grupos → dieciseisavos (ese es un concepto distinto, ya mostrado
+      // arriba solo cuando concepto === 'dieciseisavos'). 3º/4º puesto no
+      // genera bonus de avance porque no hay ronda siguiente tras esa.
+      if (concepto !== 'tercerPuesto') {
         const clasifPron = getEquipoClasificadoPronosticado(picks, matchId);
         const clasifReal = getEquipoClasificadoReal(matchId);
         if (clasifPron && clasifReal && normEquipo(clasifPron) === normEquipo(clasifReal)) {
@@ -3490,67 +3487,6 @@ function showDetalle(jugador, concepto) {
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-// ── PRÓXIMOS PARTIDOS ──
-function renderUpcoming() {
-  const pending = state.partidos
-    .filter(p => p.gL === '' && p.gV === '')
-    .slice(0, 5);
-
-  if (!pending.length) {
-    document.getElementById('upcoming-content').innerHTML =
-      '<div class="loading">No hay partidos pendientes.</div>';
-    return;
-  }
-
-  let html = '';
-
-  pending.forEach(p => {
-    const esBonus = parseInt(p.bonus) === 2;
-    const bonusTag = esBonus
-      ? '<span style="font-size:0.8rem;font-weight:900;background:#3a2200;color:var(--gold);border:1px solid var(--gold);border-radius:4px;padding:0.15rem 0.45rem;margin-left:0.5rem">×2🔥</span>'
-      : '';
-
-    // Cabecera del partido
-    html += `<div style="margin-bottom:1.5rem">
-      <div style="background:var(--card);border:${esBonus?'2px solid var(--gold)':'1px solid var(--border)'};border-radius:var(--radius);overflow:hidden">
-        <!-- Partido header -->
-        <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0.5rem;padding:0.85rem 1rem;border-bottom:1px solid var(--border)">
-          <div class="team home">${getFlag(p.local)} ${p.local}</div>
-          <div class="score-box">
-            <div class="score pending" style="font-size:1.1rem">vs</div>
-            <div class="match-meta">${p.fecha ?? ''} ${bonusTag}</div>
-          </div>
-          <div class="team away">${getFlag(p.visitante)} ${p.visitante}</div>
-        </div>`;
-
-    // Pronósticos de cada participante
-    const picks = state.pronosticos.filter(pr => pr.partido_id === p.id && pr.jugador !== '_resultados');
-
-    if (picks.length) {
-      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:0">`;
-      picks.forEach((pick, idx) => {
-        const borderRight = '1px solid var(--border)';
-        const borderBottom = '1px solid var(--border)';
-        const signo = parseInt(pick.gL) > parseInt(pick.gV) ? '1'
-                    : parseInt(pick.gL) < parseInt(pick.gV) ? '2' : 'X';
-        const signoColor = signo === '1' ? '#4a9' : signo === '2' ? '#e85' : '#99b';
-
-        html += `<div style="padding:0.6rem 0.75rem;border-right:${borderRight};border-bottom:${borderBottom};text-align:center">
-          <div style="font-size:0.7rem;color:var(--muted);font-weight:600;margin-bottom:0.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pick.jugador}</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--white);line-height:1">${pick.gL}–${pick.gV}</div>
-          <div style="font-size:0.65rem;font-weight:700;color:${signoColor};margin-top:0.1rem">${signo}</div>
-        </div>`;
-      });
-      html += `</div>`;
-    } else {
-      html += `<div style="padding:0.75rem;font-size:0.8rem;color:var(--muted);text-align:center">Sin pronósticos</div>`;
-    }
-
-    html += `</div></div>`;
-  });
-
-  document.getElementById('upcoming-content').innerHTML = html;
-}
 
 // ── CLASIFICACIÓN POR GRUPOS — CONGELADA ──
 // La fase de grupos del Mundial 2026 ya ha terminado (72/72 partidos
@@ -3923,8 +3859,8 @@ function resetPlayoff() {
   renderRanking();
   const jugadorSeleccionado = document.getElementById('player-selector')?.value;
   if (jugadorSeleccionado) renderPicksRondas(jugadorSeleccionado);
-  const subpanelEliminatoria = document.getElementById('subpanel-upcoming-eliminatoria');
-  if (subpanelEliminatoria && subpanelEliminatoria.classList.contains('active')) {
+  const panelUpcoming = document.getElementById('panel-upcoming');
+  if (panelUpcoming && panelUpcoming.classList.contains('active')) {
     renderUpcomingEliminatoria();
   }
 }
@@ -4238,10 +4174,10 @@ function pickWinner(matchId, side) {
   const jugadorSeleccionado = document.getElementById('player-selector')?.value;
   if (jugadorSeleccionado) renderPicksRondas(jugadorSeleccionado);
 
-  // La vista "Próximos → Eliminatoria" (todos los participantes a la vez)
+  // La vista "Próximos" (todos los participantes a la vez, eliminatoria)
   // también usa el cuadro resuelto en vivo.
-  const subpanelEliminatoria = document.getElementById('subpanel-upcoming-eliminatoria');
-  if (subpanelEliminatoria && subpanelEliminatoria.classList.contains('active')) {
+  const panelUpcoming = document.getElementById('panel-upcoming');
+  if (panelUpcoming && panelUpcoming.classList.contains('active')) {
     renderUpcomingEliminatoria();
   }
 }
@@ -4709,13 +4645,6 @@ function switchSubTab(panelName, subName, btn) {
   panel.querySelectorAll('.subtab').forEach(t => t.classList.remove('active'));
   document.getElementById('subpanel-' + panelName + '-' + subName).classList.add('active');
   btn.classList.add('active');
-
-  // En "Próximos", el sub-apartado de Eliminatoria se calcula la primera
-  // vez que se entra en él (no en la carga inicial, para no hacer trabajo
-  // de más si el usuario nunca lo abre).
-  if (panelName === 'upcoming' && subName === 'eliminatoria') {
-    renderUpcomingEliminatoria();
-  }
 }
 
 // ── DEMO DATA (cuando no hay Sheet configurado) ──
