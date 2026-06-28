@@ -2875,6 +2875,7 @@ async function loadData() {
     // a mano en resultados.json → "_playoff_partidos". Una vez registrados
     // aquí ya NO se actualizan a través de la pestaña Grupos.
     state.playoffPartidos = resultados['_playoff_partidos'] || [];
+    _playoffMatchCache = null; // invalida la caché de cruces resueltos (ver getPlayoffPartidoResuelto)
     // Clasificación final de grupos — datos congelados (GRUPOS_FINAL), la
     // usan tanto la pestaña Grupos como la resolución de slots del Play Off.
     state.groupStandings = buildGroupStandings();
@@ -2978,7 +2979,7 @@ function getEquipoClasificadoPronosticado(picks, matchId) {
 // se refleja en la puntuación de Clasificación, igual que ya pasa con el
 // propio cuadro visual.
 function getEquipoClasificadoReal(matchId) {
-  const real = getPlayoffPartidoFijado(matchId);
+  const real = getPlayoffPartidoResuelto(matchId);
   if (real && real.gL !== '' && real.gV !== '') {
     const gL = parseInt(real.gL), gV = parseInt(real.gV);
     if (!isNaN(gL) && !isNaN(gV) && gL !== gV) {
@@ -3063,7 +3064,10 @@ function calcPlayoffPointsForPlayer(jugador) {
     let ptsResultadoRonda = 0, ptsClasifRonda = 0;
     ronda.matchIds.forEach(matchId => {
       const pronostico = picks.find(p => p.partido_id === matchId);
-      const real = getPlayoffPartidoFijado(matchId);
+      // getPlayoffPartidoResuelto: aunque resultados.json deje local/visitante
+      // vacíos (caso normal), aquí necesitamos el nombre real del equipo para
+      // poder comparar el cruce pronosticado — si no, nunca coincidiría.
+      const real = getPlayoffPartidoResuelto(matchId);
 
       const { pts: ptsResultado } = calcPlayoffMatchPoints(pronostico, real, ronda.faseKey);
       ptsResultadoRonda += ptsResultado;
@@ -3090,7 +3094,7 @@ function calcPlayoffPointsForPlayer(jugador) {
       ptsClasifSemis += CONFIG.PTS['Semifinal']?.clasificado_final || 0;
     }
     const pronostico = picks.find(p => p.partido_id === matchId);
-    const real = getPlayoffPartidoFijado(matchId);
+    const real = getPlayoffPartidoResuelto(matchId);
     if (pronostico && real && clasifPron && real.gL !== '' && real.gV !== '') {
       const realL = normEquipo(real.local), realV = normEquipo(real.visitante);
       const pronA = normEquipo(pronostico.equipoA), pronB = normEquipo(pronostico.equipoB);
@@ -3108,7 +3112,7 @@ function calcPlayoffPointsForPlayer(jugador) {
 
   // 3er/4º puesto: solo puntos de resultado (no genera bonus de "equipo" después)
   const pronostico3 = picks.find(p => p.partido_id === 'tercer-1');
-  const real3 = getPlayoffPartidoFijado('tercer-1');
+  const real3 = getPlayoffPartidoResuelto('tercer-1');
   const { pts: pts3 } = calcPlayoffMatchPoints(pronostico3, real3, '3er puesto');
   desglose.tercerPuesto.resultado = pts3;
 
@@ -3365,7 +3369,7 @@ function showDetalle(jugador, concepto) {
     const matchIds = ronda ? ronda.matchIds : (concepto === 'tercerPuesto' ? ['tercer-1'] : []);
     matchIds.forEach(matchId => {
       const pronostico = picks.find(p => p.partido_id === matchId);
-      const real = getPlayoffPartidoFijado(matchId);
+      const real = getPlayoffPartidoResuelto(matchId);
       const faseKey = ronda ? ronda.faseKey : '3er puesto';
       const { pts: ptsResultado, tipo } = calcPlayoffMatchPoints(pronostico, real, faseKey);
       if (pronostico && pronostico.equipoA) {
@@ -3398,7 +3402,7 @@ function showDetalle(jugador, concepto) {
           if (pts) filas.push({ label: `${getFlag(clasifPron)} ${clasifPron} finalista`, pts, sub: 'clasificado a la final' });
         }
         const pronostico = picks.find(p => p.partido_id === matchId);
-        const real = getPlayoffPartidoFijado(matchId);
+        const real = getPlayoffPartidoResuelto(matchId);
         if (pronostico && real && clasifPron && real.gL !== '') {
           const realL = normEquipo(real.local), realV = normEquipo(real.visitante);
           const pronA = normEquipo(pronostico.equipoA), pronB = normEquipo(pronostico.equipoB);
@@ -3861,6 +3865,37 @@ function getSlotLabel(slot) {
 function getPlayoffPartidoFijado(matchId) {
   const lista = state.playoffPartidos || [];
   return lista.find(p => p.match === matchId) || null;
+}
+
+// Versión "resuelta" de un cruce de eliminatoria: igual que
+// getPlayoffPartidoFijado, pero si local/visitante vienen vacíos en
+// resultados.json (caso normal: "déjalos vacíos y la web pone el equipo
+// automáticamente"), los completa con el equipo real que le corresponde a
+// ese cruce según el cuadro ya resuelto (buildPlayoffRounds). Sin esto, el
+// cálculo de puntos de "equipo que avanza" (getEquipoClasificadoReal) no
+// podía saber quién ganó un cruce cuyo local/visitante no se hubiera
+// rellenado a mano — aunque el propio cuadro visual de Play Off sí lo
+// mostraba bien, porque ese usa getSlotLabel() directamente.
+// memo simple para no recorrer el cuadro completo una vez por cada cruce.
+let _playoffMatchCache = null;
+function getPlayoffPartidoResuelto(matchId) {
+  const fijado = getPlayoffPartidoFijado(matchId);
+  if (fijado && fijado.local && fijado.visitante) return fijado;
+
+  if (!_playoffMatchCache) {
+    _playoffMatchCache = {};
+    buildPlayoffRounds().forEach(ronda => ronda.forEach(m => { _playoffMatchCache[m.id] = m; }));
+  }
+  const resuelto = _playoffMatchCache[matchId];
+  if (!resuelto) return fijado;
+
+  return {
+    ...(fijado || {}),
+    local: (fijado && fijado.local) ? fijado.local : resuelto.teamA,
+    visitante: (fijado && fijado.visitante) ? fijado.visitante : resuelto.teamB,
+    gL: fijado ? fijado.gL : '',
+    gV: fijado ? fijado.gV : '',
+  };
 }
 
 // Estado de los ganadores elegidos manualmente por el usuario (solo se usa
@@ -4456,7 +4491,7 @@ function renderPicksRondas(jugador) {
 
     ronda.matchIds.forEach(matchId => {
       const pronostico = picks.find(p => p.partido_id === matchId);
-      const real = getPlayoffPartidoFijado(matchId);
+      const real = getPlayoffPartidoResuelto(matchId);
       const info = cruceInfoPorMatch[matchId];
       const equipoRealA = (real && real.local) || info?.teamA || '?';
       const equipoRealB = (real && real.visitante) || info?.teamB || '?';
@@ -4482,7 +4517,7 @@ function renderPicksRondas(jugador) {
   // 3º Y 4º PUESTO (aparte, porque no encadena con la cascada principal)
   const pron3 = picks.find(p => p.partido_id === 'tercer-1');
   if (pron3 && pron3.equipoA) {
-    const real3 = getPlayoffPartidoFijado('tercer-1');
+    const real3 = getPlayoffPartidoResuelto('tercer-1');
     const { pts, tipo } = calcPlayoffMatchPoints(pron3, real3, '3er puesto');
     const tieneResultadoReal = real3 && real3.gL !== '' && real3.gV !== '' && real3.gL != null;
     const resultHtml = tieneResultadoReal
@@ -4524,7 +4559,7 @@ function renderUpcomingEliminatoria() {
     const picksDelCruce = state.pronosticos.filter(p => p.partido_id === matchId && p.jugador !== '_resultados' && p.equipoA);
     if (!picksDelCruce.length) return '';
 
-    const real = getPlayoffPartidoFijado(matchId);
+    const real = getPlayoffPartidoResuelto(matchId);
     const tieneResultadoReal = real && real.gL !== '' && real.gV !== '' && real.gL != null;
 
     // Nombre real del cruce: si ya hay un partido fijado, usamos esos
