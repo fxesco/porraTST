@@ -213,9 +213,13 @@
       font-size: 0.78rem;
       min-width: 720px;
     }
-    .round-ranking-table th { padding: 0.5rem 0.4rem; font-size: 0.62rem; white-space: nowrap; }
-    .round-ranking-table td { padding: 0.45rem 0.4rem; vertical-align: middle; line-height: 1.25; }
+    .round-ranking-table th { padding: 0.38rem 0.22rem; font-size: 0.56rem; white-space: nowrap; }
+    .round-ranking-table td { padding: 0.34rem 0.22rem; vertical-align: middle; line-height: 1.15; }
     .round-ranking-table .player-name { font-weight: 600; white-space: nowrap; }
+    .round-ranking-table .pts-cell-clickable { padding: 0.05rem 0.08rem; }
+    .round-ranking-table .sub-stat { letter-spacing: 0.01em; }
+    .round-ranking-table th:first-child, .round-ranking-table td:first-child { width: 1.7rem !important; }
+    .round-ranking-table th:nth-child(2), .round-ranking-table td:nth-child(2) { min-width: 92px; }
 
     .pts-cell-clickable { cursor: pointer; border-radius: 4px; padding: 0.1rem 0.2rem; transition: background 0.12s; }
     .pts-cell-clickable:hover { background: rgba(255,255,255,0.06); }
@@ -978,9 +982,9 @@
       .stat-pills { gap: 0.5rem; }
       .tabs { padding: 0 0.75rem; }
       .tab { padding: 0.75rem 0.85rem; font-size: 0.8rem; }
-      .round-ranking-table { font-size: 0.72rem; }
-      .round-ranking-table th { font-size: 0.58rem; padding: 0.4rem 0.25rem; }
-      .round-ranking-table td { padding: 0.35rem 0.25rem; }
+      .round-ranking-table { font-size: 0.68rem; }
+      .round-ranking-table th { font-size: 0.54rem; padding: 0.32rem 0.16rem; }
+      .round-ranking-table td { padding: 0.28rem 0.16rem; }
       .champion-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
       .matches-groups-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
       .detalle-box { padding: 1rem; }
@@ -3128,6 +3132,30 @@ function calcPlayoffMatchPoints(pronostico, real, faseKey, todosPronosticosRonda
   return mejor.pts > 0 ? mejor : { pts: 0, tipo: 'sin_resultado' };
 }
 
+function findBestMatchingPronostico(real, faseKey, todosPronosticosRonda) {
+  if (!real || !todosPronosticosRonda || !todosPronosticosRonda.length) return null;
+  const realL = normEquipo(real.local), realV = normEquipo(real.visitante);
+  let best = null;
+  let bestPts = -1;
+  todosPronosticosRonda.forEach(cand => {
+    if (!cand || !cand.equipoA || !cand.equipoB) return;
+    const pronA = normEquipo(cand.equipoA), pronB = normEquipo(cand.equipoB);
+    let pronL, pronV, mismoCruce = false;
+    if (pronA === realL && pronB === realV) {
+      pronL = cand.gL; pronV = cand.gV; mismoCruce = true;
+    } else if (pronA === realV && pronB === realL) {
+      pronL = cand.gV; pronV = cand.gL; mismoCruce = true;
+    }
+    if (!mismoCruce || pronL === '' || pronV === '') return;
+    const resultado = calcPoints(pronL, pronV, real.gL, real.gV, faseKey, 1);
+    if (resultado.pts > bestPts) {
+      bestPts = resultado.pts;
+      best = { cand, resultado, invertido: !(pronA === realL && pronB === realV), pronL, pronV };
+    }
+  });
+  return best;
+}
+
 // Equipo que el jugador pronosticó que ganaría un cruce (para puntos de "clasificado")
 function getEquipoClasificadoPronosticado(picks, matchId) {
   const p = picks.find(pp => pp.partido_id === matchId);
@@ -3801,23 +3829,26 @@ function showDetalle(jugador, concepto) {
       matchIds.forEach(matchId => {
         const pronostico = picks.find(p => p.partido_id === matchId);
         const real = getPlayoffPartidoResuelto(matchId);
+        const best = findBestMatchingPronostico(real, faseKey, pronosRonda);
         const { pts: ptsResultado, tipo } = calcPlayoffMatchPoints(pronostico, real, faseKey, pronosRonda);
-        if (pronostico && pronostico.equipoA) {
-          const label = `${getFlag(pronostico.equipoA)} ${pronostico.equipoA} ${pronostico.gL||'?'}-${pronostico.gV||'?'} ${pronostico.equipoB} ${getFlag(pronostico.equipoB)}`;
-          if (real && real.gL !== '') {
-            // Mostrar SIEMPRE la fila cuando hay resultado real, tanto si
-            // puntúa (cruce acertado) como si no (cruce distinto / resultado fallado).
-            const pronA = normEquipo(pronostico.equipoA), pronB = normEquipo(pronostico.equipoB);
-            const realL = normEquipo(real.local), realV = normEquipo(real.visitante);
-            const esteSlotCoincide = (pronA===realL && pronB===realV) || (pronA===realV && pronB===realL);
-            let sub = '';
-            if (ptsResultado > 0) {
-              sub = esteSlotCoincide ? 'resultado del cruce' : 'cruce acertado en otro cajón del cuadro';
-            } else {
-              sub = tipo === 'cruce_fallado' ? `cruce distinto al real (${real.local} vs ${real.visitante})` : 'resultado fallado';
-            }
-            filas.push({ label, pts: ptsResultado, sub });
-          }
+        if (!real || real.gL === '' || real.gV === '') return;
+
+        // Si el mejor pronóstico del cruce está en otro slot, usar ESE en el detalle.
+        const shownPick = best?.cand || pronostico;
+        if (!shownPick || !shownPick.equipoA) return;
+
+        const shownScoreL = shownPick.gL || '?';
+        const shownScoreV = shownPick.gV || '?';
+        const label = `${getFlag(shownPick.equipoA)} ${shownPick.equipoA} ${shownScoreL}-${shownScoreV} ${shownPick.equipoB} ${getFlag(shownPick.equipoB)}`;
+
+        let sub = '';
+        if (best && best.resultado.pts > 0) {
+          sub = shownPick.partido_id === matchId ? 'resultado del cruce' : `cruce acertado en ${shownPick.partido_id}`;
+          filas.push({ label, pts: best.resultado.pts, sub });
+        } else if (pronostico && pronostico.equipoA) {
+          sub = tipo === 'cruce_fallado' ? `cruce distinto al real (${real.local} vs ${real.visitante})` : 'resultado fallado';
+          const fallbackLabel = `${getFlag(pronostico.equipoA)} ${pronostico.equipoA} ${pronostico.gL||'?'}-${pronostico.gV||'?'} ${pronostico.equipoB} ${getFlag(pronostico.equipoB)}`;
+          filas.push({ label: fallbackLabel, pts: 0, sub });
         }
       });
     }
@@ -3930,6 +3961,30 @@ function showDetalle(jugador, concepto) {
   } else if (concepto === 'total') {
     const rr = buildRanking().find(x => x.nombre === jugador);
     if (rr) total = rr.pts;
+  } else {
+    const rr = buildRanking().find(x => x.nombre === jugador);
+    if (rr) {
+      const mapaTotales = {
+        posGrupos: rr.ptsPosGrupos,
+        equipos116: rr.ptsEquipos116,
+        partidos16: rr.dieciseisavos?.resultado,
+        equipos8: rr.octavos?.equipo,
+        partidos8: rr.octavos?.resultado,
+        equipos4: rr.cuartos?.equipo,
+        partidos4: rr.cuartos?.resultado,
+        equipos2: rr.semifinal?.equipo,
+        partidos2: rr.semifinal?.resultado,
+        equipos34: rr.tercerPuesto?.equipo,
+        partido34: rr.tercerPuesto?.resultado,
+        equiposFinal: rr.final?.equipo,
+        partidoFinal: rr.final?.resultado,
+        predicciones: rr.ptsPredicciones,
+        premios: rr.ptsPremios,
+      };
+      if (Object.prototype.hasOwnProperty.call(mapaTotales, concepto) && mapaTotales[concepto] != null) {
+        total = mapaTotales[concepto];
+      }
+    }
   }
 
   let bodyHtml = filas.length
