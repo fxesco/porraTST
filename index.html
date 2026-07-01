@@ -1285,7 +1285,7 @@ const DATOS_PARTIDOS_CSV = `id,fase,local,visitante,gL,gV,fecha,bonus
 32,Fase de grupos,Turquía,Paraguay,,,20 Jun,1
 33,Fase de grupos,Alemania,Costa de Marfil,,,21 Jun,1
 34,Fase de grupos,Ecuador,Curazao,,,21 Jun,1
-35,Fase de grupos,Países Bajos,Suecia,,,20 Jun,2
+35,Fase de grupos,Países Bajos,Suecia,5,1,20 Jun,2
 36,Fase de grupos,Túnez,Japón,,,21 Jun,1
 37,Fase de grupos,Bélgica,Irán,,,21 Jun,1
 38,Fase de grupos,Nueva Zelanda,Egipto,,,22 Jun,1
@@ -3902,72 +3902,106 @@ function showDetalle(jugador, concepto) {
     if (modo === 'equipo') {
       const RONDA_ANTERIOR = { octavos: 0, cuartos: 1, semifinal: 2 };
       if (concepto2 in RONDA_ANTERIOR) {
+        // Misma lógica que calcEquiposRondaPosterior: lista pronosticada vs
+        // lista real — el acierto cuenta sin importar en qué cruce esté.
         const matchIdsAnterior = RONDAS_ELIMINATORIA[RONDA_ANTERIOR[concepto2]].matchIds;
         const faseAnterior = RONDAS_ELIMINATORIA[RONDA_ANTERIOR[concepto2]].faseKey;
         const ptsClasif = CONFIG.PTS[faseAnterior]?.clasificado || 0;
-        matchIdsAnterior.forEach(matchId => {
-          const clasifPron = getEquipoClasificadoPronosticadoEnRonda(picks, matchId, matchIdsAnterior, faseAnterior);
-          const clasifReal = getEquipoClasificadoRealEstricto(matchId);
-          if (!clasifPron && !clasifReal) return; // sin pronóstico ni resultado → saltar
-          const label = clasifPron
-            ? `${getFlag(clasifPron)} ${clasifPron} avanza`
-            : `${getFlag(clasifReal)} ${clasifReal} (sin pronóstico)`;
-          if (!clasifPron) {
-            filas.push({ label, pts: 0, sub: 'sin pronóstico de ganador' });
-            return;
+
+        // Lista real: qué equipos avanzaron realmente
+        const listaReal = matchIdsAnterior.map(id => getEquipoClasificadoRealEstricto(id)).filter(Boolean);
+        const listaRealNorm = listaReal.map(normEquipo);
+
+        // Lista pronosticada: qué equipo predijo el jugador que ganaría cada cruce
+        // (buscando en toda la ronda, no solo en el slot exacto)
+        const listaPron = matchIdsAnterior.map(id => {
+          const p = getEquipoClasificadoPronosticadoEnRonda(picks, id, matchIdsAnterior, faseAnterior);
+          return p ? { equipo: p, matchId: id } : null;
+        }).filter(Boolean);
+
+        // Para cada pronóstico, marcar si coincide con algún equipo real
+        const realesUsados = new Set();
+        listaPron.forEach(({ equipo: pron, matchId }) => {
+          const normPron = normEquipo(pron);
+          const coincide = listaRealNorm.includes(normPron) && !realesUsados.has(normPron);
+          if (coincide) realesUsados.add(normPron);
+          const realMatchEquipo = getEquipoClasificadoRealEstricto(matchId);
+          filas.push({
+            label: `${getFlag(pron)} ${pron} avanza (pronóstico)`,
+            pts: coincide ? ptsClasif : 0,
+            sub: coincide
+              ? `✓ clasificado a ${concepto2 === 'octavos' ? 'octavos' : concepto2 === 'cuartos' ? 'cuartos' : 'semifinal'}`
+              : realMatchEquipo
+                ? `real en este slot: ${getFlag(realMatchEquipo)} ${realMatchEquipo}`
+                : 'resultado pendiente'
+          });
+        });
+
+        // Equipos reales que avanzaron sin ningún pronóstico del jugador
+        listaReal.forEach(eq => {
+          if (!realesUsados.has(normEquipo(eq))) {
+            const yaEnPron = listaPron.some(p => normEquipo(p.equipo) === normEquipo(eq));
+            if (!yaEnPron) {
+              filas.push({ label: `${getFlag(eq)} ${eq} avanzó (sin pronóstico)`, pts: 0, sub: 'no pronosticado' });
+            }
           }
-          const acierto = clasifReal && normEquipo(clasifPron) === normEquipo(clasifReal) && ptsClasif;
-          filas.push({
-            label,
-            pts: acierto ? ptsClasif : 0,
-            sub: acierto ? 'equipo clasificado ✓' : clasifReal ? `real: ${getFlag(clasifReal)} ${clasifReal}` : 'resultado pendiente'
-          });
         });
+
       } else if (concepto2 === 'final') {
-        // Equipos Final: ganador de cada semifinal
-        ['semis-1','semis-2'].forEach(matchId => {
-          const semiIds = ['semis-1','semis-2'];
-          const clasifPron = getEquipoClasificadoPronosticadoEnRonda(picks, matchId, semiIds, 'Semifinal');
-          const clasifReal = getEquipoClasificadoRealEstricto(matchId);
-          if (!clasifPron && !clasifReal) return;
-          const pts = CONFIG.PTS['Semifinal']?.clasificado_final || 0;
-          const label = clasifPron ? `${getFlag(clasifPron)} ${clasifPron} finalista` : `${getFlag(clasifReal)} ${clasifReal} (sin pronóstico)`;
-          if (!clasifPron) { filas.push({ label, pts: 0, sub: 'sin pronóstico de ganador' }); return; }
-          const acierto = clasifReal && normEquipo(clasifPron) === normEquipo(clasifReal) && pts;
+        // Equipos Final: ganadores de semis → lista vs lista
+        const semiIds = ['semis-1','semis-2'];
+        const ptsF = CONFIG.PTS['Semifinal']?.clasificado_final || 0;
+        const listaRealF = semiIds.map(id => getEquipoClasificadoRealEstricto(id)).filter(Boolean);
+        const listaRealNormF = listaRealF.map(normEquipo);
+        const realesUsadosF = new Set();
+        semiIds.forEach(matchId => {
+          const pron = getEquipoClasificadoPronosticadoEnRonda(picks, matchId, semiIds, 'Semifinal');
+          if (!pron) return;
+          const normPron = normEquipo(pron);
+          const coincide = listaRealNormF.includes(normPron) && !realesUsadosF.has(normPron);
+          if (coincide) realesUsadosF.add(normPron);
+          const realSlot = getEquipoClasificadoRealEstricto(matchId);
           filas.push({
-            label,
-            pts: acierto ? pts : 0,
-            sub: acierto ? 'clasificado a la final ✓' : clasifReal ? `real: ${getFlag(clasifReal)} ${clasifReal}` : 'resultado pendiente'
+            label: `${getFlag(pron)} ${pron} finalista`,
+            pts: coincide ? ptsF : 0,
+            sub: coincide ? 'clasificado a la final ✓' : realSlot ? `real en slot: ${getFlag(realSlot)} ${realSlot}` : 'resultado pendiente'
           });
         });
+
       } else if (concepto2 === 'tercerPuesto') {
-        // Equipos 3-4: perdedor de cada semifinal
-        ['semis-1','semis-2'].forEach(matchId => {
+        // Equipos 3-4: perdedores de semis → lista vs lista
+        const semiIds = ['semis-1','semis-2'];
+        const ptsT = CONFIG.PTS['Semifinal']?.clasificado_3y4 || 0;
+        const perdedoresReales = semiIds.map(matchId => {
           const partido = getPlayoffPartidoResuelto(matchId);
           const ganador = getEquipoClasificadoRealEstricto(matchId);
-          const semiIds = ['semis-1','semis-2'];
+          if (!partido || !ganador || partido.gL === '') return null;
+          return normEquipo(ganador) === normEquipo(partido.local) ? partido.visitante : partido.local;
+        }).filter(Boolean);
+        const perdedoresNorm = perdedoresReales.map(normEquipo);
+        const realesUsadosT = new Set();
+        semiIds.forEach(matchId => {
           const ganadorPron = getEquipoClasificadoPronosticadoEnRonda(picks, matchId, semiIds, 'Semifinal');
+          if (!ganadorPron) return;
+          const partido = getPlayoffPartidoResuelto(matchId) || {};
           const pronostico = picks.find(p => p.partido_id === matchId) ||
-            semiIds.map(id => picks.find(p => p.partido_id === id)).find(p => {
-              if (!p || !p.equipoA || !partido) return false;
-              const rL = normEquipo(partido.local), rV = normEquipo(partido.visitante);
+            semiIds.map(id => picks.find(p => p.partido_id === id && p.equipoA)).find(p => {
+              if (!p || !p.equipoA) return false;
+              const rL = normEquipo(partido.local||''), rV = normEquipo(partido.visitante||'');
               const pA = normEquipo(p.equipoA), pB = normEquipo(p.equipoB);
               return (pA===rL&&pB===rV)||(pA===rV&&pB===rL);
             });
-          if (!partido || partido.gL === '' || !pronostico || !ganadorPron) return;
+          if (!pronostico) return;
           const perdedorPron = normEquipo(ganadorPron) === normEquipo(pronostico.equipoA) ? pronostico.equipoB : pronostico.equipoA;
           if (!perdedorPron) return;
-          const pts = CONFIG.PTS['Semifinal']?.clasificado_3y4 || 0;
-          if (!ganador) {
-            filas.push({ label: `${getFlag(perdedorPron)} ${perdedorPron} a 3º/4º puesto`, pts: 0, sub: 'resultado pendiente' });
-            return;
-          }
-          const perdedorReal = normEquipo(ganador) === normEquipo(partido.local) ? partido.visitante : partido.local;
-          const acierto = perdedorReal && normEquipo(perdedorPron) === normEquipo(perdedorReal) && pts;
+          const normPerd = normEquipo(perdedorPron);
+          const coincide = perdedoresNorm.includes(normPerd) && !realesUsadosT.has(normPerd);
+          if (coincide) realesUsadosT.add(normPerd);
+          const ganadorReal = getEquipoClasificadoRealEstricto(matchId);
           filas.push({
             label: `${getFlag(perdedorPron)} ${perdedorPron} a 3º/4º puesto`,
-            pts: acierto ? pts : 0,
-            sub: acierto ? 'clasificado al partido de consolación ✓' : `real: ${getFlag(perdedorReal)} ${perdedorReal}`
+            pts: coincide ? ptsT : 0,
+            sub: coincide ? 'clasificado al partido de consolación ✓' : ganadorReal ? `real: pasó ${getFlag(ganadorReal)} ${ganadorReal}` : 'resultado pendiente'
           });
         });
       }
