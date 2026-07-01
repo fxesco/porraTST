@@ -3175,6 +3175,38 @@ function getEquipoClasificadoPronosticado(picks, matchId) {
   return gL > gV ? p.equipoA : p.equipoB;
 }
 
+// Versión que busca el equipo REAL que pasa desde un matchId concreto
+// en el pronóstico del jugador, aunque el jugador lo haya puesto en otro
+// slot de esa misma ronda (caso: Brasil en R16-3 cuando el real es R16-4).
+// matchIdsRonda: todos los IDs de la ronda donde vive matchId.
+function getEquipoClasificadoPronosticadoEnRonda(picks, matchId, matchIdsRonda, faseKey) {
+  // 1) Intento directo en el slot correcto
+  const directo = getEquipoClasificadoPronosticado(picks, matchId);
+  if (directo) return directo;
+  // 2) Buscar en otros slots de la ronda cuál pick tiene los mismos dos
+  //    equipos que el real de matchId
+  const real = getPlayoffPartidoResuelto(matchId);
+  if (!real || real.gL === '' || real.gV === '' || !real.local || !real.visitante) return null;
+  const realL = normEquipo(real.local), realV = normEquipo(real.visitante);
+  if (!matchIdsRonda) return null;
+  for (const otherId of matchIdsRonda) {
+    if (otherId === matchId) continue;
+    const p = picks.find(pp => pp.partido_id === otherId);
+    if (!p || !p.equipoA || !p.equipoB) continue;
+    const pA = normEquipo(p.equipoA), pB = normEquipo(p.equipoB);
+    if ((pA === realL && pB === realV) || (pA === realV && pB === realL)) {
+      // Este pick tiene el mismo cruce — devolver el ganador pronosticado
+      if (p.gL === '' || p.gV === '') return null;
+      const gL = parseInt(p.gL), gV = parseInt(p.gV);
+      if (isNaN(gL) || isNaN(gV) || gL === gV) return null;
+      // Ajustar según si los equipos están en orden normal o invertido
+      if (pA === realL) return gL > gV ? p.equipoA : p.equipoB;
+      else              return gL > gV ? p.equipoB : p.equipoA; // invertido
+    }
+  }
+  return null;
+}
+
 // Equipo que REALMENTE ganó un cruce: prioriza el resultado real fijado en
 // _playoff_partidos, pero si todavía no existe, también acepta el ganador
 // elegido manualmente en el cuadro de Play Off (clic del usuario, guardado
@@ -3874,12 +3906,19 @@ function showDetalle(jugador, concepto) {
         const faseAnterior = RONDAS_ELIMINATORIA[RONDA_ANTERIOR[concepto2]].faseKey;
         const ptsClasif = CONFIG.PTS[faseAnterior]?.clasificado || 0;
         matchIdsAnterior.forEach(matchId => {
-          const clasifPron = getEquipoClasificadoPronosticado(picks, matchId);
+          const clasifPron = getEquipoClasificadoPronosticadoEnRonda(picks, matchId, matchIdsAnterior, faseAnterior);
           const clasifReal = getEquipoClasificadoRealEstricto(matchId);
-          if (!clasifPron) return; // sin pronóstico de ganador
+          if (!clasifPron && !clasifReal) return; // sin pronóstico ni resultado → saltar
+          const label = clasifPron
+            ? `${getFlag(clasifPron)} ${clasifPron} avanza`
+            : `${getFlag(clasifReal)} ${clasifReal} (sin pronóstico)`;
+          if (!clasifPron) {
+            filas.push({ label, pts: 0, sub: 'sin pronóstico de ganador' });
+            return;
+          }
           const acierto = clasifReal && normEquipo(clasifPron) === normEquipo(clasifReal) && ptsClasif;
           filas.push({
-            label: `${getFlag(clasifPron)} ${clasifPron} avanza`,
+            label,
             pts: acierto ? ptsClasif : 0,
             sub: acierto ? 'equipo clasificado ✓' : clasifReal ? `real: ${getFlag(clasifReal)} ${clasifReal}` : 'resultado pendiente'
           });
@@ -3887,13 +3926,16 @@ function showDetalle(jugador, concepto) {
       } else if (concepto2 === 'final') {
         // Equipos Final: ganador de cada semifinal
         ['semis-1','semis-2'].forEach(matchId => {
-          const clasifPron = getEquipoClasificadoPronosticado(picks, matchId);
+          const semiIds = ['semis-1','semis-2'];
+          const clasifPron = getEquipoClasificadoPronosticadoEnRonda(picks, matchId, semiIds, 'Semifinal');
           const clasifReal = getEquipoClasificadoRealEstricto(matchId);
-          if (!clasifPron) return;
+          if (!clasifPron && !clasifReal) return;
           const pts = CONFIG.PTS['Semifinal']?.clasificado_final || 0;
+          const label = clasifPron ? `${getFlag(clasifPron)} ${clasifPron} finalista` : `${getFlag(clasifReal)} ${clasifReal} (sin pronóstico)`;
+          if (!clasifPron) { filas.push({ label, pts: 0, sub: 'sin pronóstico de ganador' }); return; }
           const acierto = clasifReal && normEquipo(clasifPron) === normEquipo(clasifReal) && pts;
           filas.push({
-            label: `${getFlag(clasifPron)} ${clasifPron} finalista`,
+            label,
             pts: acierto ? pts : 0,
             sub: acierto ? 'clasificado a la final ✓' : clasifReal ? `real: ${getFlag(clasifReal)} ${clasifReal}` : 'resultado pendiente'
           });
@@ -3903,8 +3945,15 @@ function showDetalle(jugador, concepto) {
         ['semis-1','semis-2'].forEach(matchId => {
           const partido = getPlayoffPartidoResuelto(matchId);
           const ganador = getEquipoClasificadoRealEstricto(matchId);
-          const ganadorPron = getEquipoClasificadoPronosticado(picks, matchId);
-          const pronostico = picks.find(p => p.partido_id === matchId);
+          const semiIds = ['semis-1','semis-2'];
+          const ganadorPron = getEquipoClasificadoPronosticadoEnRonda(picks, matchId, semiIds, 'Semifinal');
+          const pronostico = picks.find(p => p.partido_id === matchId) ||
+            semiIds.map(id => picks.find(p => p.partido_id === id)).find(p => {
+              if (!p || !p.equipoA || !partido) return false;
+              const rL = normEquipo(partido.local), rV = normEquipo(partido.visitante);
+              const pA = normEquipo(p.equipoA), pB = normEquipo(p.equipoB);
+              return (pA===rL&&pB===rV)||(pA===rV&&pB===rL);
+            });
           if (!partido || partido.gL === '' || !pronostico || !ganadorPron) return;
           const perdedorPron = normEquipo(ganadorPron) === normEquipo(pronostico.equipoA) ? pronostico.equipoB : pronostico.equipoA;
           if (!perdedorPron) return;
@@ -5052,6 +5101,9 @@ function renderUpcomingEliminatoria() {
 
     const real = getPlayoffPartidoResuelto(matchId);
     const tieneResultadoReal = real && real.gL !== '' && real.gV !== '' && real.gL != null;
+
+    // Partidos ya jugados van a la pestaña "Jugados", no aquí
+    if (tieneResultadoReal) return '';
 
     // Nombre real del cruce: si ya hay un partido fijado, usamos esos
     // nombres; si no, los equipos calculados en vivo (1º/2º de grupo o
