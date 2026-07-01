@@ -3482,14 +3482,23 @@ function calcEquiposRondaPosterior(jugador, matchIdsRondaAnterior, ptsPorAcierto
   };
 
   const listaPron = matchIdsRondaAnterior.map(matchId => obtenerLadoPron(matchId)).filter(Boolean);
-  const listaRealNorm = matchIdsRondaAnterior
+  // listaRealNorm: equipos que realmente avanzaron (solo partidos ya jugados).
+  // Usamos un multiset: cada equipo real solo puede "absorber" UN pronóstico,
+  // evitando doble conteo si el jugador pone el mismo equipo en dos slots.
+  const listaRealBolsa = matchIdsRondaAnterior
     .map(matchId => obtenerLado(matchId))
     .filter(Boolean)
     .map(normEquipo);
 
   let aciertos = 0;
+  const bolsaUsada = [...listaRealBolsa]; // copia mutable
   listaPron.forEach(eq => {
-    if (listaRealNorm.includes(normEquipo(eq))) aciertos++;
+    const normEq = normEquipo(eq);
+    const idx = bolsaUsada.indexOf(normEq);
+    if (idx !== -1) {
+      aciertos++;
+      bolsaUsada.splice(idx, 1); // consumir ese equipo real (anti-duplicado)
+    }
   });
   return { pts: aciertos * ptsPorAcierto, aciertos };
 }
