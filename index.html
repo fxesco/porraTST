@@ -3461,43 +3461,40 @@ function calcPosGruposYEquiposClasificados(jugador) {
 function calcEquiposRondaPosterior(jugador, matchIdsRondaAnterior, ptsPorAcierto, lado = 'ganador') {
   const picks = state.pronosticos.filter(p => p.jugador === jugador);
 
-  const obtenerLado = (matchId) => {
+  // ── Lista REAL: equipos que ya avanzaron (partidos jugados de esta ronda) ──
+  const listaRealBolsa = matchIdsRondaAnterior.map(matchId => {
     if (lado === 'ganador') {
       return getEquipoClasificadoRealEstricto(matchId);
     }
-    // 'perdedor': el lado contrario al ganador real de ese cruce
     const partido = getPlayoffPartidoResuelto(matchId);
     const ganador = getEquipoClasificadoRealEstricto(matchId);
     if (!partido || !ganador || partido.gL === '' || partido.gV === '') return null;
     return normEquipo(ganador) === normEquipo(partido.local) ? partido.visitante : partido.local;
-  };
-  const obtenerLadoPron = (matchId) => {
-    const pronostico = picks.find(p => p.partido_id === matchId);
-    if (!pronostico) return null;
-    if (lado === 'ganador') return getEquipoClasificadoPronosticado(picks, matchId);
-    // 'perdedor' pronosticado: el lado contrario al ganador que predijo el jugador
-    const ganadorPron = getEquipoClasificadoPronosticado(picks, matchId);
+  }).filter(Boolean).map(normEquipo);
+
+  // ── Lista PRONOSTICADA: ganador/perdedor pronosticado en CADA pick de la ronda ──
+  // Se recogen TODOS los picks del jugador en esta ronda (no solo el del slot exacto),
+  // para que si el jugador tiene a Brasil en R16-12 y Brasil ganó R16-1, cuente.
+  const picksDeRonda = picks.filter(p => matchIdsRondaAnterior.includes(p.partido_id));
+  const listaPron = picksDeRonda.map(p => {
+    if (lado === 'ganador') {
+      return getEquipoClasificadoPronosticado(picks, p.partido_id);
+    }
+    // 'perdedor' pronosticado: el que NO gana el cruce según el jugador
+    const ganadorPron = getEquipoClasificadoPronosticado(picks, p.partido_id);
     if (!ganadorPron) return null;
-    return normEquipo(ganadorPron) === normEquipo(pronostico.equipoA) ? pronostico.equipoB : pronostico.equipoA;
-  };
+    return normEquipo(ganadorPron) === normEquipo(p.equipoA) ? p.equipoB : p.equipoA;
+  }).filter(Boolean);
 
-  const listaPron = matchIdsRondaAnterior.map(matchId => obtenerLadoPron(matchId)).filter(Boolean);
-  // listaRealNorm: equipos que realmente avanzaron (solo partidos ya jugados).
-  // Usamos un multiset: cada equipo real solo puede "absorber" UN pronóstico,
-  // evitando doble conteo si el jugador pone el mismo equipo en dos slots.
-  const listaRealBolsa = matchIdsRondaAnterior
-    .map(matchId => obtenerLado(matchId))
-    .filter(Boolean)
-    .map(normEquipo);
-
+  // ── Comparar lista vs bolsa (anti-duplicado: cada equipo real absorbe solo 1 acierto) ──
   let aciertos = 0;
-  const bolsaUsada = [...listaRealBolsa]; // copia mutable
+  const bolsaUsada = [...listaRealBolsa];
   listaPron.forEach(eq => {
     const normEq = normEquipo(eq);
     const idx = bolsaUsada.indexOf(normEq);
     if (idx !== -1) {
       aciertos++;
-      bolsaUsada.splice(idx, 1); // consumir ese equipo real (anti-duplicado)
+      bolsaUsada.splice(idx, 1);
     }
   });
   return { pts: aciertos * ptsPorAcierto, aciertos };
