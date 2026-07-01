@@ -5165,18 +5165,56 @@ function renderUpcomingEliminatoria() {
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0">`;
 
+    // Todos los cruces reales de esta ronda para detectar coincidencia en ronda
+    const rondaDeEsteMatch = RONDAS_ELIMINATORIA.find(r => r.matchIds.includes(matchId));
+    const todosMatchIdsRonda = rondaDeEsteMatch ? rondaDeEsteMatch.matchIds : [];
+    const otrosMatchIdsRonda = todosMatchIdsRonda.filter(id => id !== matchId);
+
     picksDelCruce.forEach(pick => {
-      // Buscar también en el resto de pronósticos de ESTA RONDA del mismo
-      // jugador (mismo criterio que el resto del motor): si acertó el
-      // cruce en otro cajón del cuadro, también cuenta.
-      const rondaDeEsteMatch = RONDAS_ELIMINATORIA.find(r => r.matchIds.includes(matchId));
       const pronosRondaJugador = rondaDeEsteMatch
         ? state.pronosticos.filter(p => p.jugador === pick.jugador && rondaDeEsteMatch.matchIds.includes(p.partido_id))
         : null;
       const { pts, tipo } = calcPlayoffMatchPoints(pick, real, faseKey, pronosRondaJugador);
       const colorResultado = tipo === 'exact' ? 'var(--lime)' : tipo === 'sign' ? '#9fc050' : tieneResultadoReal ? 'var(--red)' : 'var(--white)';
       const ptsTag = tieneResultadoReal ? `<div style="font-size:0.65rem;font-weight:700;color:${pts>0?'var(--lime)':'var(--muted)'};margin-top:0.15rem">${pts>0?'+'+pts:'0'}pts</div>` : '';
-      bloque += `<div style="padding:0.6rem 0.6rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border);text-align:center">
+
+      // ── Detección de coincidencia de equipos con el cruce real ──
+      const normA = normEquipo(pick.equipoA), normB = normEquipo(pick.equipoB);
+      const normRA = normEquipo(equipoRealA), normRB = normEquipo(equipoRealB);
+      const esEquipoReal = equipoRealA !== '?' && equipoRealB !== '?';
+
+      // 1) Coincide EXACTO: los mismos dos equipos en este slot
+      const matchExacto = esEquipoReal && ((normA === normRA && normB === normRB) || (normA === normRB && normB === normRA));
+
+      // 2) Coincide en RONDA: los mismos equipos están en otro slot de la ronda
+      let matchRonda = false;
+      if (!matchExacto && esEquipoReal) {
+        matchRonda = otrosMatchIdsRonda.some(otherId => {
+          const otroReal = getPlayoffPartidoResuelto(otherId);
+          const infoOtro = cruceInfoPorMatch[otherId];
+          const oA = normEquipo((otroReal && otroReal.local) || infoOtro?.teamA || '');
+          const oB = normEquipo((otroReal && otroReal.visitante) || infoOtro?.teamB || '');
+          if (!oA || !oB) return false;
+          return (normA === oA && normB === oB) || (normA === oB && normB === oA);
+        });
+      }
+
+      // Estilos de borde según coincidencia
+      let cardBorder = '1px solid var(--border)';
+      let cardBg = 'transparent';
+      let cardBadge = '';
+      if (matchExacto) {
+        cardBorder = '2px solid var(--gold)';
+        cardBg = 'oklch(from var(--gold) l c h / 0.08)';
+        cardBadge = `<div style="font-size:0.55rem;font-weight:700;color:var(--gold);letter-spacing:0.04em;margin-bottom:0.2rem;text-transform:uppercase">✓ cruce exacto</div>`;
+      } else if (matchRonda) {
+        cardBorder = '2px solid #e07c2a';
+        cardBg = 'oklch(from #e07c2a l c h / 0.08)';
+        cardBadge = `<div style="font-size:0.55rem;font-weight:700;color:#e07c2a;letter-spacing:0.04em;margin-bottom:0.2rem;text-transform:uppercase">≈ otro slot</div>`;
+      }
+
+      bloque += `<div style="padding:0.6rem 0.6rem;border-right:${cardBorder};border-bottom:${cardBorder};border-top:${matchExacto||matchRonda?cardBorder:'1px solid var(--border)'};border-left:${matchExacto||matchRonda?cardBorder:'1px solid var(--border)'};background:${cardBg};text-align:center;margin:${matchExacto||matchRonda?'2px':'0'};border-radius:${matchExacto||matchRonda?'4px':'0'}">
+        ${cardBadge}
         <div style="font-size:0.68rem;color:var(--muted);font-weight:600;margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pick.jugador}</div>
         <div style="font-size:0.66rem;color:var(--white);line-height:1.3">${getFlag(pick.equipoA)} ${pick.equipoA}<br>${getFlag(pick.equipoB)} ${pick.equipoB}</div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${colorResultado};margin-top:0.2rem">${pick.gL||'?'}–${pick.gV||'?'}</div>
@@ -5256,12 +5294,12 @@ function renderJugadosEliminatoria() {
           // Tiene el cruce en otro slot — mostrar ese pick
           const sp = bestOtro.cand;
           const colorRes = bestOtro.resultado.tipo === 'exact' ? 'var(--lime)' : bestOtro.resultado.tipo === 'sign' ? '#9fc050' : 'var(--red)';
-          seccion += `<div style="padding:0.6rem 0.6rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border);text-align:center">
+          seccion += `<div style="padding:0.6rem 0.6rem;border:2px solid #e07c2a;background:oklch(from #e07c2a l c h / 0.08);border-radius:4px;margin:2px;text-align:center">
+            <div style="font-size:0.55rem;font-weight:700;color:#e07c2a;letter-spacing:0.04em;margin-bottom:0.2rem;text-transform:uppercase">≈ otro slot</div>
             <div style="font-size:0.68rem;color:var(--muted);font-weight:600;margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${jugador}</div>
             <div style="font-size:0.66rem;color:var(--white);line-height:1.3">${getFlag(sp.equipoA)} ${sp.equipoA}<br>${getFlag(sp.equipoB)} ${sp.equipoB}</div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${colorRes};margin-top:0.2rem">${sp.gL||'?'}–${sp.gV||'?'}</div>
             <div style="font-size:0.65rem;font-weight:700;color:${bestOtro.resultado.pts>0?'var(--lime)':'var(--muted)'};margin-top:0.1rem">${bestOtro.resultado.pts>0?'+'+bestOtro.resultado.pts+'pts':'0pts'}</div>
-            <div style="font-size:0.58rem;color:var(--muted)">(slot ${sp.partido_id})</div>
           </div>`;
           return;
         }
@@ -5269,7 +5307,16 @@ function renderJugadosEliminatoria() {
         const { pts, tipo } = calcPlayoffMatchPoints(pick, real, ronda.faseKey, pronosRondaJugador);
         const shownPick = best?.cand || pick;
         const colorRes = tipo === 'exact' ? 'var(--lime)' : tipo === 'sign' ? '#9fc050' : 'var(--red)';
-        seccion += `<div style="padding:0.6rem 0.6rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border);text-align:center">
+        // shownPick puede ser del slot correcto (cruce exacto) o del mejor slot de ronda
+        const esSlotCorrecto = shownPick.partido_id === matchId;
+        const cardStyle = esSlotCorrecto
+          ? 'border:2px solid var(--gold);background:oklch(from var(--gold) l c h / 0.08);border-radius:4px;margin:2px'
+          : 'border:2px solid #e07c2a;background:oklch(from #e07c2a l c h / 0.08);border-radius:4px;margin:2px';
+        const cardBadge = esSlotCorrecto
+          ? `<div style="font-size:0.55rem;font-weight:700;color:var(--gold);letter-spacing:0.04em;margin-bottom:0.2rem;text-transform:uppercase">✓ cruce exacto</div>`
+          : `<div style="font-size:0.55rem;font-weight:700;color:#e07c2a;letter-spacing:0.04em;margin-bottom:0.2rem;text-transform:uppercase">≈ otro slot</div>`;
+        seccion += `<div style="padding:0.6rem 0.6rem;${cardStyle};text-align:center">
+          ${cardBadge}
           <div style="font-size:0.68rem;color:var(--muted);font-weight:600;margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${jugador}</div>
           <div style="font-size:0.66rem;color:var(--white);line-height:1.3">${getFlag(shownPick.equipoA)} ${shownPick.equipoA}<br>${getFlag(shownPick.equipoB)} ${shownPick.equipoB}</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:${colorRes};margin-top:0.2rem">${shownPick.gL||'?'}–${shownPick.gV||'?'}</div>
